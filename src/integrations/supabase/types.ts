@@ -66,6 +66,30 @@ export type Database = {
         }
         Relationships: []
       }
+      login_logs: {
+        Row: {
+          email: string
+          id: string
+          login_at: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          user_id: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          login_at?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          user_id?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          login_at?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       milestones: {
         Row: {
           created_at: string
@@ -93,6 +117,27 @@ export type Database = {
           progress?: number | null
           status?: string
           title?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          role?: Database["public"]["Enums"]["user_role"]
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
         }
         Relationships: []
       }
@@ -155,7 +200,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "pm" | "developer" | "tester" | "analyst"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -270,6 +315,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["pm", "developer", "tester", "analyst"],
+    },
   },
 } as const

@@ -13,8 +13,11 @@ import { getActivities, Activity } from "@/services/activityService";
 import { getProjectProgress } from "@/services/projectService";
 import { formatDistancePl, formatDatePl } from "@/lib/date-utils";
 import { toast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import UserMenu from "@/components/UserMenu";
 
 const Index = () => {
+  const { profile } = useAuth();
   const [taskStats, setTaskStats] = useState({ total: "0", todo: "0", inProgress: "0", done: "0" });
   const [bugStats, setBugStats] = useState({ total: "0", critical: "0", medium: "0", low: "0" });
   const [projectProgress, setProjectProgress] = useState({ progress: "0", plannedEndDate: "" });
@@ -111,6 +114,18 @@ const Index = () => {
     return formatDistancePl(date);
   };
 
+  const getRoleLabel = (role?: string) => {
+    switch (role) {
+      case 'pm': return 'Project Manager';
+      case 'developer': return 'Programista';
+      case 'tester': return 'Tester';
+      case 'analyst': return 'Analityk';
+      default: return 'Użytkownik';
+    }
+  };
+
+  const canAddTask = profile?.role === 'pm';
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -162,6 +177,7 @@ const Index = () => {
             </NavigationMenuList>
           </NavigationMenu>
           <div className="flex items-center gap-2">
+            <UserMenu />
             <Button variant="ghost" size="icon">
               <Settings className="h-5 w-5" />
             </Button>
@@ -173,10 +189,16 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-gray-900">Dashboard projektu</h2>
-          <Button className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="mr-1 h-4 w-4" />
-            Nowe zadanie
-          </Button>
+          {profile && (
+            <div className="flex items-center gap-2">
+              {canAddTask && (
+                <Button className="bg-purple-600 hover:bg-purple-700">
+                  <Plus className="mr-1 h-4 w-4" />
+                  Nowe zadanie
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         {isLoading ? (

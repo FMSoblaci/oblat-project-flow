@@ -24,3 +24,18 @@ export const getActivities = async () => {
   
   return data as Activity[];
 };
+
+export const createActivity = async (activity: Omit<Activity, 'id' | 'created_at'>) => {
+  const { data, error } = await supabase
+    .from('activities')
+    .insert(activity)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating activity:", error);
+    throw error;
+  }
+
+  return data as Activity;
+};
