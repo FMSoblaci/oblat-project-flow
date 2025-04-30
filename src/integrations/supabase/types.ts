@@ -9,7 +9,144 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          action: string
+          activity_type: string
+          created_at: string
+          description: string | null
+          id: string
+          user_name: string
+        }
+        Insert: {
+          action: string
+          activity_type: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          user_name: string
+        }
+        Update: {
+          action?: string
+          activity_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
+      bugs: {
+        Row: {
+          description: string | null
+          id: string
+          reported_at: string
+          reported_by: string | null
+          severity: string
+          status: string
+          title: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          reported_at?: string
+          reported_by?: string | null
+          severity: string
+          status: string
+          title: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          reported_at?: string
+          reported_by?: string | null
+          severity?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      milestones: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          progress: number | null
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          progress?: number | null
+          status: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          progress?: number | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      project_stats: {
+        Row: {
+          id: string
+          name: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          status: string
+          title: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          status: string
+          title: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
