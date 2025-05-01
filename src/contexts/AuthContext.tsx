@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logLogin = async () => {
     try {
-      // Fix: Remove the argument that's causing the TypeScript error
+      // Call the RPC function without any arguments
       const { error } = await supabase.rpc('add_login_log');
       if (error) {
         console.error("Error logging login:", error);

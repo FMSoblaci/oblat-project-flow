@@ -46,7 +46,9 @@ const Auth = () => {
     if (error) {
       toast({
         title: "Błąd logowania",
-        description: error.message || "Nie udało się zalogować",
+        description: typeof error === 'object' && error !== null && 'message' in error 
+          ? String(error.message) 
+          : "Nie udało się zalogować",
         variant: "destructive",
       });
     }
@@ -89,7 +91,9 @@ const Auth = () => {
     if (error) {
       toast({
         title: "Błąd rejestracji",
-        description: error.message || "Nie udało się zarejestrować",
+        description: typeof error === 'object' && error !== null && 'message' in error 
+          ? String(error.message) 
+          : "Nie udało się zarejestrować",
         variant: "destructive",
       });
     }
