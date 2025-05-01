@@ -1,10 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { Separator } from "@/components/ui/separator";
-import { Home, LayoutDashboard, CheckCheck, Plus, Settings, AlertCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { LayoutDashboard, Plus, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getTaskStats, getTasks, Task } from "@/services/taskService";
 import { getBugStats, getBugs, Bug } from "@/services/bugService";
@@ -14,7 +11,7 @@ import { getProjectProgress } from "@/services/projectService";
 import { formatDistancePl, formatDatePl } from "@/lib/date-utils";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import UserMenu from "@/components/UserMenu";
+import AppNavigation from "@/components/AppNavigation";
 
 const Index = () => {
   const { profile } = useAuth();
@@ -125,6 +122,27 @@ const Index = () => {
   };
 
   const canAddTask = profile?.role === 'pm';
+  
+  const handleAddTaskClick = () => {
+    toast({
+      title: "Informacja",
+      description: "Funkcjonalność dodawania zadań będzie dostępna wkrótce",
+    });
+  };
+
+  const handleViewMoreActivities = () => {
+    toast({
+      title: "Informacja",
+      description: "Pełna lista aktywności będzie dostępna wkrótce",
+    });
+  };
+
+  const handleViewAllTasks = () => {
+    toast({
+      title: "Informacja", 
+      description: "Lista wszystkich zadań będzie dostępna wkrótce",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -135,53 +153,7 @@ const Index = () => {
             <LayoutDashboard className="h-6 w-6 text-purple-600" />
             <h1 className="text-xl font-bold text-gray-900">Oblat Project Flow</h1>
           </div>
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Projekty</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[200px] gap-3 p-4">
-                    <li>
-                      <NavigationMenuLink asChild>
-                        <a
-                          className={navigationMenuTriggerStyle()}
-                          href="#"
-                        >
-                          Aplikacja chmurowa
-                        </a>
-                      </NavigationMenuLink>
-                    </li>
-                    <li>
-                      <NavigationMenuLink asChild>
-                        <a
-                          className={navigationMenuTriggerStyle()}
-                          href="#"
-                        >
-                          Portal Oblatów
-                        </a>
-                      </NavigationMenuLink>
-                    </li>
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/" className={navigationMenuTriggerStyle()}>
-                  Dashboard
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/" className={navigationMenuTriggerStyle()}>
-                  Zadania
-                </Link>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-          <div className="flex items-center gap-2">
-            <UserMenu />
-            <Button variant="ghost" size="icon">
-              <Settings className="h-5 w-5" />
-            </Button>
-          </div>
+          <AppNavigation />
         </div>
       </header>
 
@@ -192,7 +164,7 @@ const Index = () => {
           {profile && (
             <div className="flex items-center gap-2">
               {canAddTask && (
-                <Button className="bg-purple-600 hover:bg-purple-700">
+                <Button className="bg-purple-600 hover:bg-purple-700" onClick={handleAddTaskClick}>
                   <Plus className="mr-1 h-4 w-4" />
                   Nowe zadanie
                 </Button>
@@ -299,7 +271,9 @@ const Index = () => {
                   ))}
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">Zobacz więcej aktywności</Button>
+                  <Button variant="outline" className="w-full" onClick={handleViewMoreActivities}>
+                    Zobacz więcej aktywności
+                  </Button>
                 </CardFooter>
               </Card>
 
@@ -333,7 +307,9 @@ const Index = () => {
                   )}
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">Zobacz wszystkie zadania</Button>
+                  <Button variant="outline" className="w-full" onClick={handleViewAllTasks}>
+                    Zobacz wszystkie zadania
+                  </Button>
                 </CardFooter>
               </Card>
             </div>

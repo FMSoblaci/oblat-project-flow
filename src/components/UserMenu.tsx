@@ -9,11 +9,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LogOut, User, FileText } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 const UserMenu = () => {
   const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
 
   if (!user) return null;
 
@@ -42,6 +44,30 @@ const UserMenu = () => {
     }
   };
 
+  const handleProfileClick = () => {
+    toast({
+      title: "Informacja",
+      description: "Strona profilu jest w trakcie budowy",
+    });
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Wylogowano",
+        description: "Zostałeś pomyślnie wylogowany",
+      });
+      navigate('/auth');
+    } catch (error) {
+      toast({
+        title: "Błąd",
+        description: "Nie udało się wylogować",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="focus:outline-none">
@@ -64,7 +90,7 @@ const UserMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer">
+        <DropdownMenuItem className="cursor-pointer" onClick={handleProfileClick}>
           <User className="mr-2 h-4 w-4" />
           <span>Profil</span>
         </DropdownMenuItem>
@@ -80,7 +106,7 @@ const UserMenu = () => {
         )}
         
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer text-red-600" onClick={signOut}>
+        <DropdownMenuItem className="cursor-pointer text-red-600" onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Wyloguj się</span>
         </DropdownMenuItem>
