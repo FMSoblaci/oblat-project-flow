@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,24 +34,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // If user signs out, clear the profile
         if (event === 'SIGNED_OUT') {
           setProfile(null);
         }
         
-        // If user signs in, fetch their profile with setTimeout to avoid deadlocks
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 0);
           
-          // Log the login
           setTimeout(() => {
             logLogin();
           }, 0);
@@ -60,7 +55,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -96,7 +90,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logLogin = async () => {
     try {
-      // Fix: Call the RPC function without any parameters
       const { error } = await supabase.rpc('add_login_log');
       if (error) {
         console.error("Error logging login:", error);
