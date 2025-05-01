@@ -64,7 +64,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(session?.user || null);
         if (session?.user) {
           fetchUserProfile(session.user.id);
-          addLoginLog();
         } else {
           setIsLoading(false);
         }
@@ -94,14 +93,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.error("Error in fetchUserProfile:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const addLoginLog = async () => {
-    try {
-      await supabase.rpc("add_login_log");
-    } catch (error) {
-      console.error("Error adding login log:", error);
     }
   };
 
