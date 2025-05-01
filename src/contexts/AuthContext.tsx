@@ -51,10 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setTimeout(() => {
               fetchProfile(session.user.id);
             }, 0);
-
-            setTimeout(() => {
-              logLogin();
-            }, 0);
           }
         }
     );
@@ -92,13 +88,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logLogin = async () => {
-    try {
-      await supabase.rpc('add_login_log');
-    } catch (error) {
-      console.error("Error logging login:", error);
-    }
-  };
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -106,14 +95,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         return { error };
-      }
-      
-      // Log the login event
-      try {
-        await supabase.rpc('add_login_log');
-      } catch (e) {
-        console.error("Error logging login:", e);
-        // Don't return error here as login was successful
       }
       
       navigate('/');
