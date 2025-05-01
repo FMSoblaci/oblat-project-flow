@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
+import Tasks from "./pages/Tasks";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
@@ -29,6 +30,7 @@ const App = () => (
             {/* Protected routes - require authentication */}
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Index />} />
+              <Route path="/tasks" element={<Tasks />} />
               <Route path="/login-logs" element={<LoginLogs />} />
             </Route>
             

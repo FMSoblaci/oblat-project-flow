@@ -11,6 +11,14 @@ export type Task = {
   created_at: string;
 };
 
+export type CreateTaskInput = {
+  title: string;
+  description?: string;
+  status: string;
+  assigned_to?: string;
+  due_date?: string;
+}
+
 export const getTasks = async () => {
   const { data, error } = await supabase
     .from('tasks')
@@ -23,6 +31,52 @@ export const getTasks = async () => {
   }
   
   return data as Task[];
+};
+
+export const getTaskById = async (taskId: string) => {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('id', taskId)
+    .single();
+  
+  if (error) {
+    console.error("Error fetching task:", error);
+    throw error;
+  }
+  
+  return data as Task;
+};
+
+export const createTask = async (taskInput: CreateTaskInput): Promise<Task> => {
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert([taskInput])
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error creating task:", error);
+    throw error;
+  }
+  
+  return data as Task;
+};
+
+export const updateTask = async (taskId: string, taskInput: Partial<CreateTaskInput>): Promise<Task> => {
+  const { data, error } = await supabase
+    .from('tasks')
+    .update(taskInput)
+    .eq('id', taskId)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error updating task:", error);
+    throw error;
+  }
+  
+  return data as Task;
 };
 
 export const getTaskStats = async () => {

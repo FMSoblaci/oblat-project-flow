@@ -9,7 +9,16 @@ export type Bug = {
   status: 'open' | 'in_progress' | 'resolved';
   reported_by?: string;
   reported_at: string;
+  related_task_id?: string;
 };
+
+export type CreateBugInput = {
+  title: string;
+  description?: string;
+  severity: 'critical' | 'medium' | 'low';
+  related_task_id?: string;
+  reported_by?: string;
+}
 
 export const getBugs = async () => {
   const { data, error } = await supabase
@@ -23,6 +32,41 @@ export const getBugs = async () => {
   }
   
   return data as Bug[];
+};
+
+export const getBugsByTask = async (taskId: string) => {
+  const { data, error } = await supabase
+    .from('bugs')
+    .select('*')
+    .eq('related_task_id', taskId)
+    .order('reported_at', { ascending: false });
+  
+  if (error) {
+    console.error("Error fetching bugs for task:", error);
+    throw error;
+  }
+  
+  return data as Bug[];
+};
+
+export const createBug = async (bugInput: CreateBugInput): Promise<Bug> => {
+  const newBug = {
+    ...bugInput,
+    status: 'open' as const
+  };
+
+  const { data, error } = await supabase
+    .from('bugs')
+    .insert([newBug])
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error creating bug:", error);
+    throw error;
+  }
+  
+  return data as Bug;
 };
 
 export const getBugStats = async () => {

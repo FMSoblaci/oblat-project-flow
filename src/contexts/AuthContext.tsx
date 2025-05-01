@@ -92,8 +92,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-
-
+  const logLogin = async () => {
+    try {
+      await supabase.rpc('add_login_log');
+    } catch (error) {
+      console.error("Error logging login:", error);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
