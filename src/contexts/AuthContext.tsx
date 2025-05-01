@@ -19,10 +19,10 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: never | null }>;
-  signUp: (email: string, password: string, userData: { full_name?: string, role?: UserRole }) => Promise<{ error: never | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, userData: { full_name?: string, role?: UserRole }) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  updateProfile: (data: Partial<UserProfile>) => Promise<{ error: never | null }>;
+  updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       navigate('/');
       return { error: null };
     } catch (error) {
-      return { error };
+      return { error: error instanceof Error ? error : new Error(String(error)) };
     }
   };
 
@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return { error: null };
     } catch (error) {
-      return { error };
+      return { error: error instanceof Error ? error : new Error(String(error)) };
     }
   };
 
@@ -161,7 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return { error };
     } catch (error) {
-      return { error };
+      return { error: error instanceof Error ? error : new Error(String(error)) };
     }
   };
 
