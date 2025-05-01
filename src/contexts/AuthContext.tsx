@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logLogin = async () => {
     try {
-      // Call the RPC function without any parameters
+      // Fix: Using the correct syntax for RPC call without parameters
       const { error } = await supabase.rpc('add_login_log');
       if (error) {
         console.error("Error logging login:", error);
