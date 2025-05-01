@@ -151,7 +151,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <LayoutDashboard className="h-6 w-6 text-purple-600" />
-            <h1 className="text-xl font-bold text-gray-900">Oblat Project Flow</h1>
+            <h1 className="text-xl font-bold text-gray-900">Testowanie aplikacji finansów Oblatów</h1>
           </div>
           <AppNavigation />
         </div>
@@ -360,7 +360,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 py-4">
         <div className="container mx-auto px-4 text-center text-sm text-gray-500">
-          © 2025 Oblat Project Flow - System zarządzania projektami
+          © 2025 z dumą wspierane przez marekglowacki.pl
         </div>
       </footer>
     </div>
