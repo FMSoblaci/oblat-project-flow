@@ -1,9 +1,8 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { Session, User } from "@supabase/supabase-js";
+import {PostgrestError, Session, User} from "@supabase/supabase-js";
 
 export type UserRole = 'pm' | 'developer' | 'tester' | 'analyst';
 
@@ -20,7 +19,11 @@ interface AuthContextType {
   profile: UserProfile | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, userData: { full_name?: string, role?: UserRole }) => Promise<{ error: Error | null }>;
+  signUp: (
+      email: string,
+      password: string,
+      userData: { full_name?: string; role?: UserRole }
+  ) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
 }
@@ -89,54 +92,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logLogin = async () => {
-    try {
-      // Call the RPC function without any arguments
-      const { error } = await supabase.rpc('add_login_log');
-      if (error) {
-        console.error("Error logging login:", error);
-      }
-    } catch (error) {
-      console.error("Error logging login:", error);
-    }
-  };
+
+
 
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      
+
       if (error) {
         return { error };
       }
-      
+
       navigate('/');
       return { error: null };
-    } catch (error) {
+    } catch (error: unknown) {
       return { error: error instanceof Error ? error : new Error(String(error)) };
     }
   };
 
-  const signUp = async (email: string, password: string, userData: { full_name?: string, role?: UserRole }) => {
+  const signUp = async (
+      email: string,
+      password: string,
+      userData: { full_name?: string; role?: UserRole }
+  ) => {
     try {
-      const { error } = await supabase.auth.signUp({ 
-        email, 
+      const { error } = await supabase.auth.signUp({
+        email,
         password,
         options: {
-          data: userData
-        }
+          data: userData,
+        },
       });
-      
+
       if (error) {
         return { error };
       }
-      
+
       toast({
         title: "Konto utworzone",
         description: "Na Twój adres email został wysłany link potwierdzający.",
       });
-      
+
       return { error: null };
-    } catch (error) {
+    } catch (error: unknown) {
       return { error: error instanceof Error ? error : new Error(String(error)) };
     }
   };
@@ -148,19 +146,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = async (data: Partial<UserProfile>) => {
     if (!user) return { error: new Error("Not authenticated") };
-    
+
     try {
       const { error } = await supabase
-        .from('profiles')
-        .update(data)
-        .eq('id', user.id);
-      
+          .from('profiles')
+          .update(data)
+          .eq('id', user.id);
+
       if (!error && profile) {
         setProfile({ ...profile, ...data });
       }
-      
+
       return { error };
-    } catch (error) {
+    } catch (error: unknown) {
       return { error: error instanceof Error ? error : new Error(String(error)) };
     }
   };
