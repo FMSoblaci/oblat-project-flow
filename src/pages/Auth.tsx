@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -47,7 +46,7 @@ const Auth = () => {
     if (error) {
       toast({
         title: "Błąd logowania",
-        description: error.message,
+        description: error.message || "Nie udało się zalogować",
         variant: "destructive",
       });
     }
@@ -90,7 +89,7 @@ const Auth = () => {
     if (error) {
       toast({
         title: "Błąd rejestracji",
-        description: error.message,
+        description: error.message || "Nie udało się zarejestrować",
         variant: "destructive",
       });
     }

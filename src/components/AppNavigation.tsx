@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Home, LayoutDashboard, CheckCheck, Settings } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/use-toast";
 
 const AppNavigation = () => {
   const navigate = useNavigate();
