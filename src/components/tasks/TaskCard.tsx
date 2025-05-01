@@ -5,19 +5,31 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { formatDistancePl, formatDatePl } from "@/lib/date-utils";
-import { Bug, MessageSquare, PaperclipIcon } from "lucide-react";
+import { Bug, MessageSquare } from "lucide-react";
 import { Task } from "@/services/taskService";
 import BugReportDialog from "./BugReportDialog";
 import TaskDiscussionDrawer from "./TaskDiscussionDrawer";
+import { useDraggable } from "@dnd-kit/core";
 
 interface TaskCardProps {
   task: Task;
   onUpdate: () => void;
+  draggable?: boolean;
+  id?: string;
 }
 
-const TaskCard = ({ task, onUpdate }: TaskCardProps) => {
+const TaskCard = ({ task, onUpdate, draggable = false, id }: TaskCardProps) => {
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
   const [discussionDrawerOpen, setDiscussionDrawerOpen] = useState(false);
+  
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: id || task.id,
+    disabled: !draggable
+  });
+
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+  } : undefined;
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -65,7 +77,12 @@ const TaskCard = ({ task, onUpdate }: TaskCardProps) => {
 
   return (
     <>
-      <Card className="hover:shadow-md transition-shadow duration-300">
+      <Card 
+        className="hover:shadow-md transition-shadow duration-300 touch-manipulation"
+        ref={draggable ? setNodeRef : undefined}
+        style={draggable ? style : undefined}
+        {...(draggable ? { ...attributes, ...listeners } : {})}
+      >
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
             <Badge className={getStatusBadgeClass(task.status)} variant="secondary">

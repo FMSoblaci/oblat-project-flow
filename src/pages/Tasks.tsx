@@ -1,17 +1,15 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Bug, MessageSquare, PaperclipIcon } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AppNavigation from "@/components/AppNavigation";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { getTasks, Task } from "@/services/taskService";
 import TaskDialog from "@/components/tasks/TaskDialog";
 import TaskCard from "@/components/tasks/TaskCard";
+import KanbanBoard from "@/components/tasks/KanbanBoard";
 
 const Tasks = () => {
   const { toast } = useToast();
@@ -19,6 +17,7 @@ const Tasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("list");
   const [selectedTab, setSelectedTab] = useState("all");
 
   useEffect(() => {
@@ -86,30 +85,51 @@ const Tasks = () => {
           )}
         </div>
 
-        <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab} className="mb-8">
+        <Tabs defaultValue="list" value={viewMode} onValueChange={setViewMode} className="mb-6">
           <TabsList className="mb-4">
-            <TabsTrigger value="all">Wszystkie</TabsTrigger>
-            <TabsTrigger value="todo">Do zrobienia</TabsTrigger>
-            <TabsTrigger value="in_progress">W trakcie</TabsTrigger>
-            <TabsTrigger value="done">Zakończone</TabsTrigger>
+            <TabsTrigger value="list">Lista</TabsTrigger>
+            <TabsTrigger value="kanban">Kanban</TabsTrigger>
           </TabsList>
         </Tabs>
         
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTasks().map((task) => (
-              <TaskCard key={task.id} task={task} onUpdate={fetchTasks} />
-            ))}
-            {filteredTasks().length === 0 && (
-              <div className="col-span-full text-center py-12 bg-white rounded-lg shadow">
-                <p className="text-gray-500">Brak zadań w wybranej kategorii</p>
+        {viewMode === "list" ? (
+          <>
+            <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab} className="mb-6">
+              <TabsList className="mb-4">
+                <TabsTrigger value="all">Wszystkie</TabsTrigger>
+                <TabsTrigger value="todo">Do zrobienia</TabsTrigger>
+                <TabsTrigger value="in_progress">W trakcie</TabsTrigger>
+                <TabsTrigger value="done">Zakończone</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredTasks().map((task) => (
+                  <TaskCard key={task.id} task={task} onUpdate={fetchTasks} />
+                ))}
+                {filteredTasks().length === 0 && (
+                  <div className="col-span-full text-center py-12 bg-white rounded-lg shadow">
+                    <p className="text-gray-500">Brak zadań w wybranej kategorii</p>
+                  </div>
+                )}
               </div>
             )}
-          </div>
+          </>
+        ) : (
+          <>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
+              </div>
+            ) : (
+              <KanbanBoard tasks={tasks} onTaskUpdate={fetchTasks} />
+            )}
+          </>
         )}
       </main>
 
