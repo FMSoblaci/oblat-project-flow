@@ -26,7 +26,9 @@ const TaskDialog = ({ open, onClose, onTaskCreated, existingTask }: TaskDialogPr
   const { profile } = useAuth();
   const [title, setTitle] = useState(existingTask?.title || "");
   const [description, setDescription] = useState(existingTask?.description || "");
-  const [status, setStatus] = useState(existingTask?.status || "todo");
+  const [status, setStatus] = useState<"todo" | "in_progress" | "done">(
+    existingTask?.status as "todo" | "in_progress" | "done" || "todo"
+  );
   const [assignedTo, setAssignedTo] = useState(existingTask?.assigned_to || "");
   const [dueDate, setDueDate] = useState<Date | undefined>(existingTask?.due_date ? new Date(existingTask.due_date) : undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,7 +115,10 @@ const TaskDialog = ({ open, onClose, onTaskCreated, existingTask }: TaskDialogPr
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select 
+                value={status} 
+                onValueChange={(value: "todo" | "in_progress" | "done") => setStatus(value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Wybierz status" />
                 </SelectTrigger>

@@ -40,6 +40,7 @@ export type Database = {
         Row: {
           description: string | null
           id: string
+          related_task_id: string | null
           reported_at: string
           reported_by: string | null
           severity: string
@@ -49,6 +50,7 @@ export type Database = {
         Insert: {
           description?: string | null
           id?: string
+          related_task_id?: string | null
           reported_at?: string
           reported_by?: string | null
           severity: string
@@ -58,13 +60,57 @@ export type Database = {
         Update: {
           description?: string | null
           id?: string
+          related_task_id?: string | null
           reported_at?: string
           reported_by?: string | null
           severity?: string
           status?: string
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bugs_related_task_id_fkey"
+            columns: ["related_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          task_id: string
+          user_name: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          task_id: string
+          user_name: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          task_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       login_logs: {
         Row: {

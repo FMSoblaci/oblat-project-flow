@@ -103,15 +103,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-
+      
       if (error) {
         return { error };
       }
-
+      
+      // Log the login event
+      try {
+        await supabase.rpc('add_login_log');
+      } catch (e) {
+        console.error("Error logging login:", e);
+        // Don't return error here as login was successful
+      }
+      
       navigate('/');
       return { error: null };
-    } catch (error: unknown) {
-      return { error: error instanceof Error ? error : new Error(String(error)) };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { error };
+      }
+      return { error: new Error('Unknown error during sign in') };
     }
   };
 
@@ -179,7 +190,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     updateProfile,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
