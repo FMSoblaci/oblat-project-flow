@@ -160,7 +160,7 @@ const BugReportDialog = ({ open, onClose, onBugReported, taskId, taskTitle }: Bu
                   <SelectValue placeholder="Wybierz zadanie (opcjonalnie)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Brak powiązanego zadania</SelectItem>
+                  <SelectItem value="none">Brak powiązanego zadania</SelectItem>
                   {tasks.map((task) => (
                     <SelectItem key={task.id} value={task.id}>
                       {task.title}
