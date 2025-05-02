@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
 import LoginLogs from "./pages/LoginLogs";
+import TaskList from "./pages/TaskList";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Index />} />
               <Route path="/tasks" element={<Tasks />} />
+              <Route path="/task-list" element={<TaskList />} />
               <Route path="/bugs" element={<Bugs />} />
               <Route path="/login-logs" element={<LoginLogs />} />
             </Route>

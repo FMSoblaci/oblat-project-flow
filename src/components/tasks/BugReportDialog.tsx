@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { createBug } from "@/services/bugService";
 import { getTasks } from "@/services/taskService";
 import { useEffect } from "react";
+import { toast } from "@/components/ui/use-toast";
 
 interface BugReportDialogProps {
   open: boolean;
@@ -69,15 +70,24 @@ const BugReportDialog = ({ open, onClose, onBugReported, taskId, taskTitle }: Bu
         title,
         description,
         severity,
-        related_task_id: relatedTaskId || undefined,
+        related_task_id: relatedTaskId !== "none" ? relatedTaskId : undefined,
         reported_by: profile?.full_name || undefined,
       });
       
+      toast({
+        title: "Zgłoszenie błędu",
+        description: "Błąd został zgłoszony pomyślnie",
+      });
       onBugReported();
       resetForm();
     } catch (err) {
       console.error("Error reporting bug:", err);
       setError("Nie udało się zgłosić błędu. Spróbuj ponownie później.");
+      toast({
+        title: "Błąd",
+        description: "Nie udało się zgłosić błędu",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -87,7 +97,7 @@ const BugReportDialog = ({ open, onClose, onBugReported, taskId, taskTitle }: Bu
     setTitle("");
     setDescription("");
     setSeverity("medium");
-    if (!taskId) setRelatedTaskId("");
+    if (!taskId) setRelatedTaskId("none");
     setError("");
   };
 

@@ -2,7 +2,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
-import { Settings, Bug } from "lucide-react";
+import { Settings, Bug, CheckSquare, List } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
@@ -28,7 +28,8 @@ const AppNavigation = () => {
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <Link to="/tasks" className={navigationMenuTriggerStyle()}>
+            <Link to="/task-list" className={navigationMenuTriggerStyle()}>
+              <CheckSquare className="mr-1 h-4 w-4" />
               Zadania
             </Link>
           </NavigationMenuItem>
