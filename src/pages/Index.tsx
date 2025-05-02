@@ -9,79 +9,81 @@ import { getMilestones, Milestone } from "@/services/milestoneService";
 import { getActivities, Activity } from "@/services/activityService";
 import { getProjectProgress } from "@/services/projectService";
 import { formatDistancePl, formatDatePl } from "@/lib/date-utils";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AppNavigation from "@/components/AppNavigation";
 import { useNavigate } from "react-router-dom";
 import TaskDialog from "@/components/tasks/TaskDialog";
+import { Progress } from "@/components/ui/progress";
 
 const Index = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [taskStats, setTaskStats] = useState({ total: "0", todo: "0", inProgress: "0", done: "0" });
   const [bugStats, setBugStats] = useState({ total: "0", critical: "0", medium: "0", low: "0" });
   const [projectProgress, setProjectProgress] = useState({ progress: "0", plannedEndDate: "" });
   const [activities, setActivities] = useState<Activity[]>([]);
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
+  const [recentBugs, setRecentBugs] = useState<Bug[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Fetch all data in parallel
-        const [
-          taskStatsData,
-          bugStatsData,
-          progressData,
-          activitiesData,
-          tasksData,
-          milestonesData
-        ] = await Promise.all([
-          getTaskStats(),
-          getBugStats(),
-          getProjectProgress(),
-          getActivities(),
-          getTasks(),
-          getMilestones()
-        ]);
-        
-        setTaskStats(taskStatsData);
-        setBugStats(bugStatsData);
-        
-        // Calculate project progress based on completed vs. total tasks
-        const total = parseInt(taskStatsData.total) || 0;
-        const done = parseInt(taskStatsData.done) || 0;
-        const calculatedProgress = total > 0 ? Math.round((done / total) * 100) : 0;
-        
-        setProjectProgress({
-          progress: calculatedProgress.toString(),
-          plannedEndDate: progressData.plannedEndDate
-        });
-        
-        setActivities(activitiesData);
-        
-        // Get only the upcoming tasks (not done)
-        setUpcomingTasks(tasksData.filter(task => task.status !== 'done').slice(0, 4));
-        
-        setMilestones(milestonesData);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-        toast({
-          title: "Błąd",
-          description: "Nie udało się pobrać danych z serwera",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch all data in parallel
+      const [
+        taskStatsData,
+        bugStatsData,
+        progressData,
+        activitiesData,
+        tasksData,
+        bugsData,
+        milestonesData
+      ] = await Promise.all([
+        getTaskStats(),
+        getBugStats(),
+        getProjectProgress(),
+        getActivities(),
+        getTasks(),
+        getBugs(),
+        getMilestones()
+      ]);
+      
+      setTaskStats(taskStatsData);
+      setBugStats(bugStatsData);
+      setProjectProgress({
+        progress: progressData.progress,
+        plannedEndDate: progressData.plannedEndDate
+      });
+      
+      setActivities(activitiesData);
+      
+      // Get only the upcoming tasks (not done)
+      setUpcomingTasks(tasksData.filter(task => task.status !== 'done').slice(0, 4));
+      
+      // Get recent bugs
+      setRecentBugs(bugsData.slice(0, 4));
+      
+      setMilestones(milestonesData);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      toast({
+        title: "Błąd",
+        description: "Nie udało się pobrać danych z serwera",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getStatusClass = (dueDate: string | undefined) => {
     if (!dueDate) return "text-gray-500";
@@ -174,9 +176,13 @@ const Index = () => {
   const handleViewAllTasks = () => {
     navigate("/task-list");
   };
+  
+  const handleViewAllBugs = () => {
+    navigate("/bugs");
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="page-container bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -265,11 +271,8 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-green-600 mb-2">{projectProgress.progress}%</div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full">
-                    <div 
-                      className="h-2 bg-green-500 rounded-full" 
-                      style={{ width: `${projectProgress.progress}%` }}
-                    ></div>
+                  <div className="mb-2">
+                    <Progress value={parseInt(projectProgress.progress)} className="h-2" />
                   </div>
                   <div className="text-sm text-gray-500 mt-2">
                     Planowana data zakończenia: {projectProgress.plannedEndDate}
@@ -286,18 +289,25 @@ const Index = () => {
                   <CardDescription>Najnowsza aktywność w projekcie</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {activities.map((activity) => (
-                    <div 
-                      key={activity.id} 
-                      className={`border-l-2 ${getBorderColorByType(activity.activity_type)} pl-4 py-1`}
-                    >
-                      <div className="font-medium">{activity.user_name} {activity.action}</div>
-                      <div className="text-sm text-gray-500">
-                        {activity.description && `"${activity.description}" - `}
-                        {formatRelativeDate(activity.created_at)}
+                  {activities.length > 0 ? (
+                    activities.map((activity) => (
+                      <div 
+                        key={activity.id} 
+                        className={`border-l-2 ${getBorderColorByType(activity.activity_type)} pl-4 py-1`}
+                      >
+                        <div className="font-medium">{activity.user_name} {activity.action}</div>
+                        <div className="text-sm text-gray-500">
+                          {activity.description && `"${activity.description}" - `}
+                          {formatRelativeDate(activity.created_at)}
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 text-gray-500">
+                      <AlertCircle className="mx-auto h-8 w-8 mb-2 text-gray-400" />
+                      <p>Brak ostatnich aktywności</p>
                     </div>
-                  ))}
+                  )}
                 </CardContent>
                 <CardFooter>
                   <Button variant="outline" className="w-full" onClick={handleViewMoreActivities}>
@@ -312,23 +322,24 @@ const Index = () => {
                   <CardDescription>Zadania z najbliższymi terminami</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {upcomingTasks.map((task) => (
-                    <div key={task.id}>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-medium">{task.title}</div>
-                          <div className="text-sm text-gray-500">
-                            Przypisane: {task.assigned_to || "Nieprzypisane"}
+                  {upcomingTasks.length > 0 ? (
+                    upcomingTasks.map((task) => (
+                      <div key={task.id}>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-medium">{task.title}</div>
+                            <div className="text-sm text-gray-500">
+                              Przypisane: {task.assigned_to || "Nieprzypisane"}
+                            </div>
+                          </div>
+                          <div className={`text-sm ${getStatusClass(task.due_date)}`}>
+                            {task.due_date ? formatRelativeDate(task.due_date) : "Brak terminu"}
                           </div>
                         </div>
-                        <div className={`text-sm ${getStatusClass(task.due_date)}`}>
-                          {task.due_date ? formatRelativeDate(task.due_date) : "Brak terminu"}
-                        </div>
+                        <Separator className="my-3" />
                       </div>
-                      <Separator className="my-3" />
-                    </div>
-                  ))}
-                  {upcomingTasks.length === 0 && (
+                    ))
+                  ) : (
                     <div className="text-center py-6 text-gray-500">
                       <AlertCircle className="mx-auto h-8 w-8 mb-2 text-gray-400" />
                       <p>Brak nadchodzących zadań</p>
@@ -342,46 +353,89 @@ const Index = () => {
                 </CardFooter>
               </Card>
             </div>
-
-            {/* Upcoming Milestones */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Kamienie milowe projektu</CardTitle>
-                <CardDescription>Nadchodzące kluczowe wydarzenia</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-start gap-4 flex-wrap">
-                  {milestones.map((milestone) => (
-                    <div key={milestone.id} className="border border-gray-200 rounded-lg p-4 flex-1 min-w-[250px]">
-                      <div className={`${getStatusBadgeClass(milestone.status)} text-xs font-medium rounded px-2 py-1 inline-block mb-2`}>
-                        {milestone.status === 'in_progress' ? 'W trakcie' : 
-                         milestone.status === 'planned' ? 'Planowane' : 'Zakończone'}
+            
+            {/* Recent Bugs and Upcoming Milestones */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Ostatnio zgłoszone błędy</CardTitle>
+                  <CardDescription>Najnowsze zgłoszenia błędów</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {recentBugs.length > 0 ? (
+                    recentBugs.map((bug) => (
+                      <div key={bug.id}>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-medium">{bug.title}</div>
+                            <div className="text-sm">
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-xs ${
+                                bug.severity === 'critical' ? 'bg-red-100 text-red-800' :
+                                bug.severity === 'medium' ? 'bg-amber-100 text-amber-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                {bug.severity === 'critical' ? 'Krytyczny' :
+                                bug.severity === 'medium' ? 'Średni' : 'Niski'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {formatRelativeDate(bug.reported_at)}
+                          </div>
+                        </div>
+                        <Separator className="my-3" />
                       </div>
-                      <h3 className="font-medium text-lg">{milestone.title}</h3>
-                      <p className="text-sm text-gray-500 mb-2">
-                        Termin: {milestone.due_date ? formatDatePl(new Date(milestone.due_date)) : 'Nieokreślony'}
-                      </p>
-                      <div className="w-full h-2 bg-gray-200 rounded-full">
-                        <div 
-                          className={`h-2 rounded-full ${
-                            milestone.status === 'in_progress' ? 'bg-purple-500' : 
-                            milestone.status === 'planned' ? 'bg-amber-500' : 'bg-green-500'
-                          }`}
-                          style={{ width: `${milestone.progress}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-sm text-right mt-1">{milestone.progress}%</p>
-                    </div>
-                  ))}
-                  {milestones.length === 0 && (
-                    <div className="text-center py-6 text-gray-500 w-full">
+                    ))
+                  ) : (
+                    <div className="text-center py-6 text-gray-500">
                       <AlertCircle className="mx-auto h-8 w-8 mb-2 text-gray-400" />
-                      <p>Brak kamieni milowych</p>
+                      <p>Brak zgłoszonych błędów</p>
                     </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" className="w-full" onClick={handleViewAllBugs}>
+                    Zobacz wszystkie błędy
+                  </Button>
+                </CardFooter>
+              </Card>
+              
+              {/* Upcoming Milestones section remains the same */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Kamienie milowe projektu</CardTitle>
+                  <CardDescription>Nadchodzące kluczowe wydarzenia</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-start gap-4 flex-wrap">
+                    {milestones.length > 0 ? (
+                      milestones.map((milestone) => (
+                        <div key={milestone.id} className="border border-gray-200 rounded-lg p-4 flex-1 min-w-[250px]">
+                          <div className={`${getStatusBadgeClass(milestone.status)} text-xs font-medium rounded px-2 py-1 inline-block mb-2`}>
+                            {milestone.status === 'in_progress' ? 'W trakcie' : 
+                            milestone.status === 'planned' ? 'Planowane' : 'Zakończone'}
+                          </div>
+                          <h3 className="font-medium text-lg">{milestone.title}</h3>
+                          <p className="text-sm text-gray-500 mb-2">
+                            Termin: {milestone.due_date ? formatDatePl(new Date(milestone.due_date)) : 'Nieokreślony'}
+                          </p>
+                          <Progress value={milestone.progress || 0} className={`
+                            ${milestone.status === 'in_progress' ? '[&>div]:bg-purple-500' : 
+                              milestone.status === 'planned' ? '[&>div]:bg-amber-500' : '[&>div]:bg-green-500'}`} 
+                          />
+                          <p className="text-sm text-right mt-1">{milestone.progress}%</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-6 text-gray-500 w-full">
+                        <AlertCircle className="mx-auto h-8 w-8 mb-2 text-gray-400" />
+                        <p>Brak kamieni milowych</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </>
         )}
       </main>

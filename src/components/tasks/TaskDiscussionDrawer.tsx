@@ -88,9 +88,8 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
   };
 
   const handleSubmitComment = async () => {
-    if (!newComment.trim() && !selectedFile) return;
-    if (!profile) return;
-
+    if ((!newComment.trim() && !selectedFile) || !profile) return;
+    
     setIsSubmitting(true);
     try {
       let imageUrl = null;
@@ -101,7 +100,7 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
       
       const comment = await createComment({
         task_id: task.id,
-        content: newComment.trim(),
+        content: newComment.trim() || "(załączono plik)",
         user_name: profile.full_name || "Anonimowy",
         image_url: imageUrl,
       });
@@ -225,7 +224,7 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
               
               <Button 
                 onClick={handleSubmitComment} 
-                disabled={isSubmitting || (!newComment.trim() && !selectedFile)}
+                disabled={isSubmitting}
               >
                 <Send className="mr-1 h-4 w-4" />
                 Wyślij
