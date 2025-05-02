@@ -8,22 +8,51 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { createBug } from "@/services/bugService";
+import { getTasks } from "@/services/taskService";
+import { useEffect } from "react";
 
 interface BugReportDialogProps {
   open: boolean;
   onClose: () => void;
-  taskId: string;
-  taskTitle: string;
   onBugReported: () => void;
+  taskId?: string;
+  taskTitle?: string;
 }
 
-const BugReportDialog = ({ open, onClose, taskId, taskTitle, onBugReported }: BugReportDialogProps) => {
+const BugReportDialog = ({ open, onClose, onBugReported, taskId, taskTitle }: BugReportDialogProps) => {
   const { profile } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState<"critical" | "medium" | "low">("medium");
+  const [relatedTaskId, setRelatedTaskId] = useState(taskId || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [tasks, setTasks] = useState<{id: string, title: string}[]>([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+  
+  useEffect(() => {
+    if (open && !taskId) {
+      fetchTasks();
+    }
+  }, [open, taskId]);
+  
+  useEffect(() => {
+    if (taskId) {
+      setRelatedTaskId(taskId);
+    }
+  }, [taskId]);
+  
+  const fetchTasks = async () => {
+    try {
+      setIsLoadingTasks(true);
+      const tasksData = await getTasks();
+      setTasks(tasksData.map(task => ({ id: task.id, title: task.title })));
+    } catch (err) {
+      console.error("Error fetching tasks:", err);
+    } finally {
+      setIsLoadingTasks(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,13 +69,12 @@ const BugReportDialog = ({ open, onClose, taskId, taskTitle, onBugReported }: Bu
         title,
         description,
         severity,
-        related_task_id: taskId,
+        related_task_id: relatedTaskId || undefined,
         reported_by: profile?.full_name || undefined,
       });
       
-      resetForm();
       onBugReported();
-      onClose();
+      resetForm();
     } catch (err) {
       console.error("Error reporting bug:", err);
       setError("Nie udało się zgłosić błędu. Spróbuj ponownie później.");
@@ -59,6 +87,7 @@ const BugReportDialog = ({ open, onClose, taskId, taskTitle, onBugReported }: Bu
     setTitle("");
     setDescription("");
     setSeverity("medium");
+    if (!taskId) setRelatedTaskId("");
     setError("");
   };
 
@@ -81,20 +110,13 @@ const BugReportDialog = ({ open, onClose, taskId, taskTitle, onBugReported }: Bu
             </div>
           )}
           
-          <div className="grid gap-1">
-            <Label className="text-gray-500 text-sm">Zadanie</Label>
-            <div className="text-sm font-medium bg-gray-50 p-2 rounded border">
-              {taskTitle}
-            </div>
-          </div>
-          
           <div className="grid gap-2">
-            <Label htmlFor="title">Tytuł błędu</Label>
+            <Label htmlFor="title">Tytuł</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Krótki opis problemu"
+              placeholder="Zwięzły opis błędu"
               required
             />
           </div>
@@ -112,7 +134,10 @@ const BugReportDialog = ({ open, onClose, taskId, taskTitle, onBugReported }: Bu
           
           <div className="grid gap-2">
             <Label htmlFor="severity">Priorytet</Label>
-            <Select value={severity} onValueChange={(value: "critical" | "medium" | "low") => setSeverity(value)}>
+            <Select 
+              value={severity} 
+              onValueChange={(value: "critical" | "medium" | "low") => setSeverity(value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Wybierz priorytet" />
               </SelectTrigger>
@@ -123,6 +148,35 @@ const BugReportDialog = ({ open, onClose, taskId, taskTitle, onBugReported }: Bu
               </SelectContent>
             </Select>
           </div>
+          
+          {!taskId && (
+            <div className="grid gap-2">
+              <Label htmlFor="related_task">Powiązane zadanie</Label>
+              <Select 
+                value={relatedTaskId} 
+                onValueChange={setRelatedTaskId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Wybierz zadanie (opcjonalnie)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Brak powiązanego zadania</SelectItem>
+                  {tasks.map((task) => (
+                    <SelectItem key={task.id} value={task.id}>
+                      {task.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
+          {taskId && taskTitle && (
+            <div className="bg-gray-50 p-3 rounded border border-gray-200">
+              <p className="text-sm font-medium">Powiązane zadanie:</p>
+              <p className="text-sm text-gray-600">{taskTitle}</p>
+            </div>
+          )}
           
           <DialogFooter>
             <Button 
@@ -137,7 +191,7 @@ const BugReportDialog = ({ open, onClose, taskId, taskTitle, onBugReported }: Bu
               disabled={isSubmitting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isSubmitting ? "Zgłaszanie..." : "Zgłoś błąd"}
+              {isSubmitting ? "Zapisywanie..." : "Zgłoś błąd"}
             </Button>
           </DialogFooter>
         </form>

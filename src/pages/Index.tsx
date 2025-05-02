@@ -1,9 +1,10 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { LayoutDashboard, Plus, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getTaskStats, getTasks, Task } from "@/services/taskService";
+import { getTaskStats, getTasks, Task, createTask } from "@/services/taskService";
 import { getBugStats, getBugs, Bug } from "@/services/bugService";
 import { getMilestones, Milestone } from "@/services/milestoneService";
 import { getActivities, Activity } from "@/services/activityService";
@@ -12,9 +13,12 @@ import { formatDistancePl, formatDatePl } from "@/lib/date-utils";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AppNavigation from "@/components/AppNavigation";
+import { useNavigate } from "react-router-dom";
+import TaskDialog from "@/components/tasks/TaskDialog";
 
 const Index = () => {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [taskStats, setTaskStats] = useState({ total: "0", todo: "0", inProgress: "0", done: "0" });
   const [bugStats, setBugStats] = useState({ total: "0", critical: "0", medium: "0", low: "0" });
   const [projectProgress, setProjectProgress] = useState({ progress: "0", plannedEndDate: "" });
@@ -22,6 +26,7 @@ const Index = () => {
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,7 +52,17 @@ const Index = () => {
         
         setTaskStats(taskStatsData);
         setBugStats(bugStatsData);
-        setProjectProgress(progressData);
+        
+        // Calculate project progress based on completed vs. total tasks
+        const total = parseInt(taskStatsData.total) || 0;
+        const done = parseInt(taskStatsData.done) || 0;
+        const calculatedProgress = total > 0 ? Math.round((done / total) * 100) : 0;
+        
+        setProjectProgress({
+          progress: calculatedProgress.toString(),
+          plannedEndDate: progressData.plannedEndDate
+        });
+        
         setActivities(activitiesData);
         
         // Get only the upcoming tasks (not done)
@@ -124,9 +139,29 @@ const Index = () => {
   const canAddTask = profile?.role === 'pm';
   
   const handleAddTaskClick = () => {
+    setTaskDialogOpen(true);
+  };
+
+  const handleTaskCreated = (task: Task) => {
+    // Update the upcoming tasks list
+    setUpcomingTasks(prev => [task, ...prev].slice(0, 4));
+    setTaskDialogOpen(false);
+    
+    // Recalculate task stats
+    const newTotal = (parseInt(taskStats.total) + 1).toString();
+    const newTodo = task.status === 'todo' ? (parseInt(taskStats.todo) + 1).toString() : taskStats.todo;
+    const newInProgress = task.status === 'in_progress' ? (parseInt(taskStats.inProgress) + 1).toString() : taskStats.inProgress;
+    
+    setTaskStats({
+      ...taskStats,
+      total: newTotal,
+      todo: newTodo,
+      inProgress: newInProgress
+    });
+    
     toast({
-      title: "Informacja",
-      description: "Funkcjonalność dodawania zadań będzie dostępna wkrótce",
+      title: "Zadanie utworzone",
+      description: "Nowe zadanie zostało dodane do projektu.",
     });
   };
 
@@ -138,10 +173,7 @@ const Index = () => {
   };
 
   const handleViewAllTasks = () => {
-    toast({
-      title: "Informacja", 
-      description: "Lista wszystkich zadań będzie dostępna wkrótce",
-    });
+    navigate("/tasks");
   };
 
   return (
@@ -163,12 +195,10 @@ const Index = () => {
           <h2 className="text-2xl font-bold text-gray-900">Dashboard projektu</h2>
           {profile && (
             <div className="flex items-center gap-2">
-              {canAddTask && (
-                <Button className="bg-purple-600 hover:bg-purple-700" onClick={handleAddTaskClick}>
-                  <Plus className="mr-1 h-4 w-4" />
-                  Nowe zadanie
-                </Button>
-              )}
+              <Button className="bg-purple-600 hover:bg-purple-700" onClick={handleAddTaskClick}>
+                <Plus className="mr-1 h-4 w-4" />
+                Nowe zadanie
+              </Button>
             </div>
           )}
         </div>
@@ -356,6 +386,12 @@ const Index = () => {
           </>
         )}
       </main>
+
+      <TaskDialog
+        open={taskDialogOpen} 
+        onClose={() => setTaskDialogOpen(false)}
+        onTaskCreated={handleTaskCreated}
+      />
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 py-4">

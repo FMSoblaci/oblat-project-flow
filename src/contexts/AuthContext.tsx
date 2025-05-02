@@ -118,11 +118,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     userData: { full_name?: string; role?: UserRole }
   ) => {
     try {
+      // Fix TypeScript error by using the correct type for userData
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: userData,
+          data: userData as Record<string, unknown>,
         },
       });
 

@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Tasks from "./pages/Tasks";
+import Bugs from "./pages/Bugs";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
@@ -31,6 +32,7 @@ const App = () => (
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Index />} />
               <Route path="/tasks" element={<Tasks />} />
+              <Route path="/bugs" element={<Bugs />} />
               <Route path="/login-logs" element={<LoginLogs />} />
             </Route>
             

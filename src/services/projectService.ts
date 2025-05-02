@@ -1,24 +1,29 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { getTaskStats } from "./taskService";
 
 export const getProjectProgress = async () => {
+  // Get the planned end date from project_stats
   const { data, error } = await supabase
     .from('project_stats')
     .select('*')
-    .in('name', ['project_progress', 'planned_end_date']);
+    .eq('name', 'planned_end_date')
+    .single();
     
   if (error) {
-    console.error("Error fetching project progress:", error);
+    console.error("Error fetching planned end date:", error);
     throw error;
   }
 
-  const statsObject: Record<string, string> = {};
-  data.forEach(item => {
-    statsObject[item.name] = item.value;
-  });
+  // Calculate progress based on task completion ratio
+  const taskStats = await getTaskStats();
+  const total = parseInt(taskStats.total) || 0;
+  const done = parseInt(taskStats.done) || 0;
+  
+  const progress = total > 0 ? Math.round((done / total) * 100) : 0;
   
   return {
-    progress: statsObject.project_progress || '0',
-    plannedEndDate: statsObject.planned_end_date || ''
+    progress: progress.toString(),
+    plannedEndDate: data.value || ''
   };
 };
