@@ -58,7 +58,7 @@ const TaskList = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="page-container bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -70,7 +70,7 @@ const TaskList = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-grow">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-gray-900">Lista zadań</h2>
           <div className="flex items-center gap-4">
@@ -116,7 +116,7 @@ const TaskList = () => {
         ) : (
           <>
             {viewMode === "list" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {filteredTasks.map((task) => (
                   <TaskCard 
                     key={task.id} 

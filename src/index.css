@@ -31,14 +31,14 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground min-h-screen flex flex-col;
+    @apply bg-background text-foreground min-h-screen;
   }
 }
 
 @layer components {
-  /* Layout components for sticky footer */
-  #root {
-    @apply flex flex-col min-h-screen;
+  /* Layout components with flexbox for sticky footer */
+  body, #root {
+    @apply min-h-screen flex flex-col;
   }
   
   main {
@@ -47,5 +47,9 @@
   
   footer {
     @apply mt-auto;
+  }
+
+  .page-container {
+    @apply flex flex-col min-h-screen;
   }
 }

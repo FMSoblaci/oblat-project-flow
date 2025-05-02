@@ -50,14 +50,18 @@ export const getBugsByTask = async (taskId: string) => {
 };
 
 export const createBug = async (bugInput: CreateBugInput): Promise<Bug> => {
-  const newBug = {
+  // If related_task_id is an empty string, set it to null
+  const sanitizedInput = {
     ...bugInput,
+    related_task_id: bugInput.related_task_id && bugInput.related_task_id.trim() !== '' 
+      ? bugInput.related_task_id 
+      : null,
     status: 'open' as const
   };
 
   const { data, error } = await supabase
     .from('bugs')
-    .insert([newBug])
+    .insert([sanitizedInput])
     .select()
     .single();
   
