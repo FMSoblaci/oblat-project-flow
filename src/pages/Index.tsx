@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -5,8 +6,6 @@ import { LayoutDashboard, Plus, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getTaskStats, getTasks, Task, createTask } from "@/services/taskService";
 import { getBugStats, getBugs, Bug } from "@/services/bugService";
-import { getMilestones, Milestone } from "@/services/milestoneService";
-import { getActivities, Activity } from "@/services/activityService";
 import { getProjectProgress } from "@/services/projectService";
 import { formatDistancePl, formatDatePl } from "@/lib/date-utils";
 import { useToast } from "@/components/ui/use-toast";
@@ -23,10 +22,8 @@ const Index = () => {
   const [taskStats, setTaskStats] = useState({ total: "0", todo: "0", inProgress: "0", done: "0" });
   const [bugStats, setBugStats] = useState({ total: "0", critical: "0", medium: "0", low: "0" });
   const [projectProgress, setProjectProgress] = useState({ progress: "0", plannedEndDate: "" });
-  const [activities, setActivities] = useState<Activity[]>([]);
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
   const [recentBugs, setRecentBugs] = useState<Bug[]>([]);
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
 
@@ -43,18 +40,14 @@ const Index = () => {
         taskStatsData,
         bugStatsData,
         progressData,
-        activitiesData,
         tasksData,
-        bugsData,
-        milestonesData
+        bugsData
       ] = await Promise.all([
         getTaskStats(),
         getBugStats(),
         getProjectProgress(),
-        getActivities(),
         getTasks(),
-        getBugs(),
-        getMilestones()
+        getBugs()
       ]);
       
       setTaskStats(taskStatsData);
@@ -64,15 +57,12 @@ const Index = () => {
         plannedEndDate: progressData.plannedEndDate
       });
       
-      setActivities(activitiesData);
-      
       // Get only the upcoming tasks (not done)
       setUpcomingTasks(tasksData.filter(task => task.status !== 'done').slice(0, 4));
       
       // Get recent bugs
       setRecentBugs(bugsData.slice(0, 4));
       
-      setMilestones(milestonesData);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       toast({
@@ -96,15 +86,6 @@ const Index = () => {
     if (diffDays <= 2) return "text-red-500";
     if (diffDays <= 7) return "text-amber-500";
     return "text-gray-500";
-  };
-
-  const getBorderColorByType = (type: string) => {
-    switch (type) {
-      case 'task': return 'border-purple-500';
-      case 'bug': return 'border-red-500';
-      case 'milestone': return 'border-green-500';
-      default: return 'border-gray-500';
-    }
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -163,13 +144,6 @@ const Index = () => {
     toast({
       title: "Zadanie utworzone",
       description: "Nowe zadanie zostało dodane do projektu.",
-    });
-  };
-
-  const handleViewMoreActivities = () => {
-    toast({
-      title: "Informacja",
-      description: "Pełna lista aktywności będzie dostępna wkrótce",
     });
   };
 
@@ -281,41 +255,8 @@ const Index = () => {
               </Card>
             </div>
 
-            {/* Recent Activity and Tasks Section */}
+            {/* Tasks and Bugs Sections */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Ostatnia aktywność</CardTitle>
-                  <CardDescription>Najnowsza aktywność w projekcie</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {activities.length > 0 ? (
-                    activities.map((activity) => (
-                      <div 
-                        key={activity.id} 
-                        className={`border-l-2 ${getBorderColorByType(activity.activity_type)} pl-4 py-1`}
-                      >
-                        <div className="font-medium">{activity.user_name} {activity.action}</div>
-                        <div className="text-sm text-gray-500">
-                          {activity.description && `"${activity.description}" - `}
-                          {formatRelativeDate(activity.created_at)}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-6 text-gray-500">
-                      <AlertCircle className="mx-auto h-8 w-8 mb-2 text-gray-400" />
-                      <p>Brak ostatnich aktywności</p>
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full" onClick={handleViewMoreActivities}>
-                    Zobacz więcej aktywności
-                  </Button>
-                </CardFooter>
-              </Card>
-
               <Card>
                 <CardHeader>
                   <CardTitle>Nadchodzące zadania</CardTitle>
@@ -352,10 +293,7 @@ const Index = () => {
                   </Button>
                 </CardFooter>
               </Card>
-            </div>
-            
-            {/* Recent Bugs and Upcoming Milestones */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
               <Card>
                 <CardHeader>
                   <CardTitle>Ostatnio zgłoszone błędy</CardTitle>
@@ -398,42 +336,6 @@ const Index = () => {
                     Zobacz wszystkie błędy
                   </Button>
                 </CardFooter>
-              </Card>
-              
-              {/* Upcoming Milestones section remains the same */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Kamienie milowe projektu</CardTitle>
-                  <CardDescription>Nadchodzące kluczowe wydarzenia</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-start gap-4 flex-wrap">
-                    {milestones.length > 0 ? (
-                      milestones.map((milestone) => (
-                        <div key={milestone.id} className="border border-gray-200 rounded-lg p-4 flex-1 min-w-[250px]">
-                          <div className={`${getStatusBadgeClass(milestone.status)} text-xs font-medium rounded px-2 py-1 inline-block mb-2`}>
-                            {milestone.status === 'in_progress' ? 'W trakcie' : 
-                            milestone.status === 'planned' ? 'Planowane' : 'Zakończone'}
-                          </div>
-                          <h3 className="font-medium text-lg">{milestone.title}</h3>
-                          <p className="text-sm text-gray-500 mb-2">
-                            Termin: {milestone.due_date ? formatDatePl(new Date(milestone.due_date)) : 'Nieokreślony'}
-                          </p>
-                          <Progress value={milestone.progress || 0} className={`
-                            ${milestone.status === 'in_progress' ? '[&>div]:bg-purple-500' : 
-                              milestone.status === 'planned' ? '[&>div]:bg-amber-500' : '[&>div]:bg-green-500'}`} 
-                          />
-                          <p className="text-sm text-right mt-1">{milestone.progress}%</p>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-6 text-gray-500 w-full">
-                        <AlertCircle className="mx-auto h-8 w-8 mb-2 text-gray-400" />
-                        <p>Brak kamieni milowych</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
               </Card>
             </div>
           </>
