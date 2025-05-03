@@ -20,17 +20,22 @@ export type CreateTaskInput = {
 }
 
 export const getTasks = async () => {
-  const { data, error } = await supabase
-    .from('tasks')
-    .select('*')
-    .order('due_date', { ascending: true });
-  
-  if (error) {
-    console.error("Error fetching tasks:", error);
-    throw error;
+  try {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('due_date', { ascending: true });
+    
+    if (error) {
+      console.error("Error fetching tasks:", error);
+      return [];
+    }
+    
+    return data as Task[];
+  } catch (error) {
+    console.error("Unexpected error fetching tasks:", error);
+    return [];
   }
-  
-  return data as Task[];
 };
 
 export const getTaskById = async (taskId: string) => {
@@ -80,26 +85,31 @@ export const updateTask = async (taskId: string, taskInput: Partial<CreateTaskIn
 };
 
 export const getTaskStats = async () => {
-  // First, fetch all tasks to calculate stats dynamically
-  const { data, error } = await supabase
-    .from('tasks')
-    .select('status');
-    
-  if (error) {
-    console.error("Error fetching task stats:", error);
-    throw error;
-  }
+  try {
+    // First, fetch all tasks to calculate stats dynamically
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('status');
+      
+    if (error) {
+      console.error("Error fetching task stats:", error);
+      return { total: "0", todo: "0", inProgress: "0", done: "0" };
+    }
 
-  // Calculate stats from fetched tasks
-  const total = data.length;
-  const todo = data.filter(task => task.status === 'todo').length;
-  const inProgress = data.filter(task => task.status === 'in_progress').length;
-  const done = data.filter(task => task.status === 'done').length;
-  
-  return {
-    total: total.toString(),
-    todo: todo.toString(),
-    inProgress: inProgress.toString(),
-    done: done.toString()
-  };
+    // Calculate stats from fetched tasks
+    const total = data.length;
+    const todo = data.filter(task => task.status === 'todo').length;
+    const inProgress = data.filter(task => task.status === 'in_progress').length;
+    const done = data.filter(task => task.status === 'done').length;
+    
+    return {
+      total: total.toString(),
+      todo: todo.toString(),
+      inProgress: inProgress.toString(),
+      done: done.toString()
+    };
+  } catch (error) {
+    console.error("Unexpected error fetching task stats:", error);
+    return { total: "0", todo: "0", inProgress: "0", done: "0" };
+  }
 };
