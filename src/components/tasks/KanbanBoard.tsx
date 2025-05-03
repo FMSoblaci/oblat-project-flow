@@ -79,10 +79,11 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
         });
       } finally {
         setIsUpdating(false);
+        setActiveId(null);
       }
+    } else {
+      setActiveId(null);
     }
-    
-    setActiveId(null);
   };
 
   const getStatusName = (status: string) => {

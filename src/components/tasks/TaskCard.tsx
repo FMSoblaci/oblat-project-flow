@@ -38,6 +38,7 @@ const TaskCard = ({ task, onUpdate, draggable = false, id }: TaskCardProps) => {
 
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    zIndex: 1000
   } : undefined;
 
   const getStatusBadgeClass = (status: string) => {
@@ -123,7 +124,7 @@ const TaskCard = ({ task, onUpdate, draggable = false, id }: TaskCardProps) => {
                   {getStatusLabel(task.status)}
                 </Badge>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
+              <DropdownMenuContent align="start" className="bg-white border shadow-md z-50">
                 <DropdownMenuItem 
                   onClick={() => handleStatusChange('todo')}
                   disabled={task.status === 'todo' || isUpdating}
