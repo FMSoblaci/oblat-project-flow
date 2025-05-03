@@ -26,6 +26,7 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
   const { toast } = useToast();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [currentDroppableId, setCurrentDroppableId] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -61,6 +62,7 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
     const currentTask = tasks.find(task => task.id === taskId);
     
     if (currentTask && currentTask.status !== newStatus) {
+      setIsUpdating(true);
       try {
         await updateTask(taskId, { status: newStatus });
         toast({
@@ -75,6 +77,8 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
           description: "Nie udało się zaktualizować statusu zadania",
           variant: "destructive",
         });
+      } finally {
+        setIsUpdating(false);
       }
     }
     

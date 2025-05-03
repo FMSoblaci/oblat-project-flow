@@ -20,6 +20,13 @@ export type CreateBugInput = {
   reported_by?: string;
 }
 
+export type UpdateBugInput = {
+  title?: string;
+  description?: string;
+  severity?: 'critical' | 'medium' | 'low';
+  status?: 'open' | 'in_progress' | 'resolved';
+}
+
 export const getBugs = async () => {
   try {
     const { data, error } = await supabase
@@ -84,6 +91,27 @@ export const createBug = async (bugInput: CreateBugInput): Promise<Bug> => {
     return data as Bug;
   } catch (error) {
     console.error("Unexpected error creating bug:", error);
+    throw error;
+  }
+};
+
+export const updateBug = async (bugId: string, bugInput: UpdateBugInput): Promise<Bug> => {
+  try {
+    const { data, error } = await supabase
+      .from('bugs')
+      .update(bugInput)
+      .eq('id', bugId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error updating bug:", error);
+      throw error;
+    }
+    
+    return data as Bug;
+  } catch (error) {
+    console.error("Unexpected error updating bug:", error);
     throw error;
   }
 };

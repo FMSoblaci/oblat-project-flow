@@ -5,11 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { formatDistancePl, formatDatePl } from "@/lib/date-utils";
-import { Bug, MessageSquare } from "lucide-react";
-import { Task } from "@/services/taskService";
+import { Bug, MessageSquare, Check } from "lucide-react";
+import { Task, updateTask } from "@/services/taskService";
 import BugReportDialog from "./BugReportDialog";
 import TaskDiscussionDrawer from "./TaskDiscussionDrawer";
 import { useDraggable } from "@dnd-kit/core";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/use-toast";
 
 interface TaskCardProps {
   task: Task;
@@ -21,6 +28,8 @@ interface TaskCardProps {
 const TaskCard = ({ task, onUpdate, draggable = false, id }: TaskCardProps) => {
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
   const [discussionDrawerOpen, setDiscussionDrawerOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const { toast } = useToast();
   
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: id || task.id,
@@ -57,6 +66,29 @@ const TaskCard = ({ task, onUpdate, draggable = false, id }: TaskCardProps) => {
     }
   };
 
+  const handleStatusChange = async (newStatus: 'todo' | 'in_progress' | 'done') => {
+    if (task.status === newStatus) return;
+    
+    setIsUpdating(true);
+    try {
+      await updateTask(task.id, { status: newStatus });
+      toast({
+        title: "Status zaktualizowany",
+        description: `Zadanie przeniesione do "${getStatusLabel(newStatus)}"`,
+      });
+      onUpdate();
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      toast({
+        title: "Błąd",
+        description: "Nie udało się zaktualizować statusu zadania",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const formatDueDate = (date: string | undefined) => {
     if (!date) return "Brak terminu";
     return formatDatePl(new Date(date));
@@ -85,9 +117,39 @@ const TaskCard = ({ task, onUpdate, draggable = false, id }: TaskCardProps) => {
       >
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
-            <Badge className={getStatusBadgeClass(task.status)} variant="secondary">
-              {getStatusLabel(task.status)}
-            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Badge className={`${getStatusBadgeClass(task.status)} cursor-pointer`} variant="secondary">
+                  {getStatusLabel(task.status)}
+                </Badge>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem 
+                  onClick={() => handleStatusChange('todo')}
+                  disabled={task.status === 'todo' || isUpdating}
+                  className="cursor-pointer"
+                >
+                  {task.status === 'todo' && <Check className="h-4 w-4 mr-2" />}
+                  Do zrobienia
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => handleStatusChange('in_progress')}
+                  disabled={task.status === 'in_progress' || isUpdating}
+                  className="cursor-pointer"
+                >
+                  {task.status === 'in_progress' && <Check className="h-4 w-4 mr-2" />}
+                  W trakcie
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => handleStatusChange('done')}
+                  disabled={task.status === 'done' || isUpdating}
+                  className="cursor-pointer"
+                >
+                  {task.status === 'done' && <Check className="h-4 w-4 mr-2" />}
+                  Zakończone
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <CardTitle className="text-lg mt-2">{task.title}</CardTitle>
         </CardHeader>

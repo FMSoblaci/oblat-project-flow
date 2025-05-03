@@ -2,15 +2,21 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AppNavigation from "@/components/AppNavigation";
-import { getBugs, Bug, createBug } from "@/services/bugService";
+import { getBugs, Bug, createBug, updateBug } from "@/services/bugService";
 import { Badge } from "@/components/ui/badge";
 import { formatDistancePl } from "@/lib/date-utils";
 import BugReportDialog from "@/components/tasks/BugReportDialog";
 import { Link } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Bugs = () => {
   const { toast } = useToast();
@@ -18,6 +24,7 @@ const Bugs = () => {
   const [bugs, setBugs] = useState<Bug[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBugs();
@@ -53,6 +60,27 @@ const Bugs = () => {
     });
   };
 
+  const handleStatusChange = async (bugId: string, newStatus: 'open' | 'in_progress' | 'resolved') => {
+    setIsUpdating(bugId);
+    try {
+      await updateBug(bugId, { status: newStatus });
+      toast({
+        title: "Status zaktualizowany",
+        description: `Status błędu został zmieniony na "${getStatusLabel(newStatus)}"`,
+      });
+      fetchBugs();
+    } catch (error) {
+      console.error("Error updating bug status:", error);
+      toast({
+        title: "Błąd",
+        description: "Nie udało się zaktualizować statusu błędu",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(null);
+    }
+  };
+
   const getSeverityBadgeClass = (severity: string) => {
     switch (severity) {
       case "critical":
@@ -69,13 +97,26 @@ const Bugs = () => {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "open":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 hover:bg-red-200";
       case "in_progress":
-        return "bg-amber-100 text-amber-800";
+        return "bg-amber-100 text-amber-800 hover:bg-amber-200";
       case "resolved":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 hover:bg-green-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 hover:bg-gray-200";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "open":
+        return "Otwarty";
+      case "in_progress":
+        return "W trakcie";
+      case "resolved":
+        return "Rozwiązany";
+      default:
+        return status;
     }
   };
 
@@ -115,10 +156,43 @@ const Bugs = () => {
                       {bug.severity === 'critical' ? 'Krytyczny' : 
                        bug.severity === 'medium' ? 'Średni' : 'Niski'}
                     </Badge>
-                    <Badge className={getStatusBadgeClass(bug.status)} variant="outline">
-                      {bug.status === 'open' ? 'Otwarty' : 
-                       bug.status === 'in_progress' ? 'W trakcie' : 'Rozwiązany'}
-                    </Badge>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Badge 
+                          className={`${getStatusBadgeClass(bug.status)} cursor-pointer`} 
+                          variant="outline"
+                        >
+                          {getStatusLabel(bug.status)}
+                        </Badge>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(bug.id, 'open')}
+                          disabled={bug.status === 'open' || isUpdating === bug.id}
+                          className="cursor-pointer"
+                        >
+                          {bug.status === 'open' && <Check className="h-4 w-4 mr-2" />}
+                          Otwarty
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(bug.id, 'in_progress')}
+                          disabled={bug.status === 'in_progress' || isUpdating === bug.id}
+                          className="cursor-pointer"
+                        >
+                          {bug.status === 'in_progress' && <Check className="h-4 w-4 mr-2" />}
+                          W trakcie
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(bug.id, 'resolved')}
+                          disabled={bug.status === 'resolved' || isUpdating === bug.id}
+                          className="cursor-pointer"
+                        >
+                          {bug.status === 'resolved' && <Check className="h-4 w-4 mr-2" />}
+                          Rozwiązany
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                   <CardTitle className="text-lg mt-2">{bug.title}</CardTitle>
                 </CardHeader>
