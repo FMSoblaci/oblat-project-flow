@@ -74,25 +74,26 @@ export const createBug = async (bugInput: CreateBugInput): Promise<Bug> => {
 };
 
 export const getBugStats = async () => {
+  // First, fetch all bugs to calculate stats dynamically
   const { data, error } = await supabase
-    .from('project_stats')
-    .select('*')
-    .in('name', ['total_bugs', 'critical_bugs', 'medium_bugs', 'low_bugs']);
+    .from('bugs')
+    .select('severity');
     
   if (error) {
     console.error("Error fetching bug stats:", error);
     throw error;
   }
 
-  const statsObject: Record<string, string> = {};
-  data.forEach(item => {
-    statsObject[item.name] = item.value;
-  });
+  // Calculate stats from fetched bugs
+  const total = data.length;
+  const critical = data.filter(bug => bug.severity === 'critical').length;
+  const medium = data.filter(bug => bug.severity === 'medium').length;
+  const low = data.filter(bug => bug.severity === 'low').length;
   
   return {
-    total: statsObject.total_bugs || '0',
-    critical: statsObject.critical_bugs || '0',
-    medium: statsObject.medium_bugs || '0',
-    low: statsObject.low_bugs || '0'
+    total: total.toString(),
+    critical: critical.toString(),
+    medium: medium.toString(),
+    low: low.toString()
   };
 };

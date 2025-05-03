@@ -24,6 +24,6 @@ export const getProjectProgress = async () => {
   
   return {
     progress: progress.toString(),
-    plannedEndDate: data.value || ''
+    plannedEndDate: data?.value || 'Nie określono'
   };
 };

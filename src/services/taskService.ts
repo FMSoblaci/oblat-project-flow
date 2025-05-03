@@ -80,25 +80,26 @@ export const updateTask = async (taskId: string, taskInput: Partial<CreateTaskIn
 };
 
 export const getTaskStats = async () => {
+  // First, fetch all tasks to calculate stats dynamically
   const { data, error } = await supabase
-    .from('project_stats')
-    .select('*')
-    .in('name', ['total_tasks', 'todo_tasks', 'in_progress_tasks', 'done_tasks']);
+    .from('tasks')
+    .select('status');
     
   if (error) {
     console.error("Error fetching task stats:", error);
     throw error;
   }
 
-  const statsObject: Record<string, string> = {};
-  data.forEach(item => {
-    statsObject[item.name] = item.value;
-  });
+  // Calculate stats from fetched tasks
+  const total = data.length;
+  const todo = data.filter(task => task.status === 'todo').length;
+  const inProgress = data.filter(task => task.status === 'in_progress').length;
+  const done = data.filter(task => task.status === 'done').length;
   
   return {
-    total: statsObject.total_tasks || '0',
-    todo: statsObject.todo_tasks || '0',
-    inProgress: statsObject.in_progress_tasks || '0',
-    done: statsObject.done_tasks || '0'
+    total: total.toString(),
+    todo: todo.toString(),
+    inProgress: inProgress.toString(),
+    done: done.toString()
   };
 };
