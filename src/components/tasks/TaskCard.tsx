@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { formatDistancePl, formatDatePl } from "@/lib/date-utils";
-import { Bug, MessageSquare, Check } from "lucide-react";
+import { Bug, MessageSquare, Check, ChevronDown } from "lucide-react";
 import { Task, updateTask } from "@/services/taskService";
 import BugReportDialog from "./BugReportDialog";
 import TaskDiscussionDrawer from "./TaskDiscussionDrawer";
@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 interface TaskCardProps {
   task: Task;
@@ -69,7 +70,7 @@ const TaskCard = ({ task, onUpdate, draggable = false, id, isDragging = false }:
   };
 
   const handleStatusChange = async (newStatus: 'todo' | 'in_progress' | 'done') => {
-    if (task.status === newStatus || isDragging) return;
+    if (task.status === newStatus || isDragging || isUpdating) return;
     
     setIsUpdating(true);
     try {
@@ -119,45 +120,48 @@ const TaskCard = ({ task, onUpdate, draggable = false, id, isDragging = false }:
       >
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Badge 
-                  className={`${getStatusBadgeClass(task.status)} cursor-pointer`} 
-                  variant="secondary"
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className={`${getStatusBadgeClass(task.status)} border-none px-2 py-0 h-auto font-normal text-xs flex items-center gap-1`}
+                  disabled={isUpdating || isDragging}
                 >
                   {getStatusLabel(task.status)}
-                </Badge>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
+                  <ChevronDown className="h-3 w-3 opacity-70" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent 
+                className="p-0 w-40 bg-white" 
                 align="start" 
-                className="bg-white border shadow-md z-[1000]"
+                sideOffset={5}
               >
-                <DropdownMenuItem 
-                  onClick={() => handleStatusChange('todo')}
-                  disabled={task.status === 'todo' || isUpdating}
-                  className="cursor-pointer"
-                >
-                  {task.status === 'todo' && <Check className="h-4 w-4 mr-2" />}
-                  Do zrobienia
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => handleStatusChange('in_progress')}
-                  disabled={task.status === 'in_progress' || isUpdating}
-                  className="cursor-pointer"
-                >
-                  {task.status === 'in_progress' && <Check className="h-4 w-4 mr-2" />}
-                  W trakcie
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => handleStatusChange('done')}
-                  disabled={task.status === 'done' || isUpdating}
-                  className="cursor-pointer"
-                >
-                  {task.status === 'done' && <Check className="h-4 w-4 mr-2" />}
-                  Zakończone
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                <div className="py-1 rounded-md shadow-sm">
+                  <div
+                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 flex items-center gap-2 ${task.status === 'todo' ? 'bg-amber-50 font-medium' : ''}`}
+                    onClick={() => handleStatusChange('todo')}
+                  >
+                    {task.status === 'todo' && <Check className="h-4 w-4" />}
+                    <span className={task.status === 'todo' ? 'ml-0' : 'ml-6'}>Do zrobienia</span>
+                  </div>
+                  <div
+                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 flex items-center gap-2 ${task.status === 'in_progress' ? 'bg-blue-50 font-medium' : ''}`}
+                    onClick={() => handleStatusChange('in_progress')}
+                  >
+                    {task.status === 'in_progress' && <Check className="h-4 w-4" />}
+                    <span className={task.status === 'in_progress' ? 'ml-0' : 'ml-6'}>W trakcie</span>
+                  </div>
+                  <div
+                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 flex items-center gap-2 ${task.status === 'done' ? 'bg-green-50 font-medium' : ''}`}
+                    onClick={() => handleStatusChange('done')}
+                  >
+                    {task.status === 'done' && <Check className="h-4 w-4" />}
+                    <span className={task.status === 'done' ? 'ml-0' : 'ml-6'}>Zakończone</span>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
           <CardTitle className="text-lg mt-2">{task.title}</CardTitle>
         </CardHeader>
