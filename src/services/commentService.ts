@@ -18,6 +18,8 @@ export type CreateCommentInput = {
 };
 
 export const getComments = async (taskId: string) => {
+  console.log("Fetching comments for task:", taskId);
+  
   const { data, error } = await supabase
     .from('comments')
     .select('*')
@@ -29,11 +31,17 @@ export const getComments = async (taskId: string) => {
     throw error;
   }
   
+  console.log("Comments fetched successfully:", data?.length || 0, "comments");
   return data as Comment[];
 };
 
 export const createComment = async (commentInput: CreateCommentInput): Promise<Comment> => {
-  console.log("Creating comment:", commentInput);
+  console.log("Creating comment with data:", commentInput);
+  
+  if (!commentInput.task_id) {
+    console.error("Error: Missing task_id in comment input");
+    throw new Error("Missing task_id");
+  }
   
   const { data, error } = await supabase
     .from('comments')
@@ -42,10 +50,14 @@ export const createComment = async (commentInput: CreateCommentInput): Promise<C
     .single();
   
   if (error) {
-    console.error("Error creating comment:", error);
+    console.error("Error creating comment:", {
+      message: error.message,
+      details: error.details,
+      code: error.code
+    });
     throw error;
   }
   
-  console.log("Comment created:", data);
+  console.log("Comment created successfully:", data);
   return data as Comment;
 };

@@ -74,6 +74,13 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
       const fileName = `${Date.now()}-${file.name}`;
+      console.log("Uploading file:", {
+        fileName,
+        bucket: "task_attachments",
+        path: `comments/${task.id}/${fileName}`,
+        fileSize: file.size
+      });
+      
       const { data, error } = await supabase.storage
         .from("task_attachments")
         .upload(`comments/${task.id}/${fileName}`, file);
@@ -87,6 +94,7 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
         .from("task_attachments")
         .getPublicUrl(`comments/${task.id}/${fileName}`);
 
+      console.log("File uploaded successfully, URL:", publicUrl.publicUrl);
       return publicUrl.publicUrl;
     } catch (error) {
       console.error("Error in uploadImage:", error);
@@ -100,39 +108,47 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
   };
 
   const handleSubmitComment = async () => {
-    if ((!newComment.trim() && !selectedFile) || !profile) {
-      console.log("Validation failed:", { 
-        newComment: newComment.trim(), 
-        hasFile: !!selectedFile, 
-        hasProfile: !!profile 
+    console.log("Attempting to submit comment", {
+      hasContent: !!newComment.trim(),
+      hasFile: !!selectedFile,
+      hasProfile: !!profile,
+      profileDetails: profile,
+      taskId: task?.id
+    });
+    
+    if ((!newComment.trim() && !selectedFile)) {
+      console.log("Validation failed: Empty comment and no file");
+      toast({
+        title: "Błąd",
+        description: "Wypełnij treść komentarza lub dodaj załącznik",
+        variant: "destructive"
       });
       return;
     }
     
-    console.log("Submitting comment", { 
-      content: newComment, 
-      hasFile: !!selectedFile, 
-      profileName: profile?.full_name 
-    });
+    // Allow comments even without profile by using default values
+    const userName = profile?.full_name || "Anonimowy użytkownik";
     
     setIsSubmitting(true);
     try {
       let imageUrl = null;
       
       if (selectedFile) {
+        console.log("Uploading image...");
         imageUrl = await uploadImage(selectedFile);
       }
       
       const commentInput = {
         task_id: task.id,
         content: newComment.trim() || "(załączono plik)",
-        user_name: profile.full_name || "Anonimowy",
+        user_name: userName,
         image_url: imageUrl,
       };
       
-      console.log("Comment input:", commentInput);
+      console.log("Sending comment to Supabase:", commentInput);
       const comment = await createComment(commentInput);
       
+      console.log("Comment created successfully:", comment);
       setComments(prev => [...prev, comment]);
       setNewComment("");
       setSelectedFile(null);
@@ -142,11 +158,15 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
         title: "Sukces",
         description: "Komentarz został dodany",
       });
-    } catch (error) {
-      console.error("Error submitting comment:", error);
+    } catch (error: any) {
+      console.error("Failed to submit comment:", {
+        message: error.message,
+        details: error.details,
+        code: error.code
+      });
       toast({
         title: "Błąd",
-        description: "Nie udało się dodać komentarza",
+        description: `Nie udało się dodać komentarza: ${error.message || "Nieznany błąd"}`,
         variant: "destructive",
       });
     } finally {
@@ -159,7 +179,9 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    console.log("Key pressed:", { key: e.key, ctrlKey: e.ctrlKey });
     if (e.key === 'Enter' && e.ctrlKey) {
+      e.preventDefault();
       handleSubmitComment();
     }
   };
@@ -241,7 +263,6 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
                 onKeyDown={handleKeyDown}
                 placeholder="Napisz komentarz... (Ctrl+Enter aby wysłać)"
                 className="resize-none"
-                rows={2}
                 disabled={isSubmitting}
               />
             </div>
