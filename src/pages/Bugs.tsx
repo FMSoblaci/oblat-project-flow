@@ -11,12 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatDistancePl } from "@/lib/date-utils";
 import BugReportDialog from "@/components/tasks/BugReportDialog";
 import { Link } from "react-router-dom";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const Bugs = () => {
   const { toast } = useToast();
@@ -157,42 +153,48 @@ const Bugs = () => {
                        bug.severity === 'medium' ? 'Średni' : 'Niski'}
                     </Badge>
                     
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Badge 
-                          className={`${getStatusBadgeClass(bug.status)} cursor-pointer`} 
-                          variant="outline"
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className={`${getStatusBadgeClass(bug.status)} border-none px-2 py-0 h-auto font-normal text-xs flex items-center gap-1`}
+                          disabled={isUpdating === bug.id}
                         >
                           {getStatusLabel(bug.status)}
-                        </Badge>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(bug.id, 'open')}
-                          disabled={bug.status === 'open' || isUpdating === bug.id}
-                          className="cursor-pointer"
-                        >
-                          {bug.status === 'open' && <Check className="h-4 w-4 mr-2" />}
-                          Otwarty
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(bug.id, 'in_progress')}
-                          disabled={bug.status === 'in_progress' || isUpdating === bug.id}
-                          className="cursor-pointer"
-                        >
-                          {bug.status === 'in_progress' && <Check className="h-4 w-4 mr-2" />}
-                          W trakcie
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleStatusChange(bug.id, 'resolved')}
-                          disabled={bug.status === 'resolved' || isUpdating === bug.id}
-                          className="cursor-pointer"
-                        >
-                          {bug.status === 'resolved' && <Check className="h-4 w-4 mr-2" />}
-                          Rozwiązany
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          <ChevronDown className="h-3 w-3 opacity-70" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent 
+                        className="p-0 w-40 bg-white" 
+                        align="end" 
+                        sideOffset={5}
+                      >
+                        <div className="py-1 rounded-md shadow-sm">
+                          <div
+                            className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 flex items-center gap-2 ${bug.status === 'open' ? 'bg-red-50 font-medium' : ''}`}
+                            onClick={() => handleStatusChange(bug.id, 'open')}
+                          >
+                            {bug.status === 'open' && <Check className="h-4 w-4" />}
+                            <span className={bug.status === 'open' ? 'ml-0' : 'ml-6'}>Otwarty</span>
+                          </div>
+                          <div
+                            className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 flex items-center gap-2 ${bug.status === 'in_progress' ? 'bg-amber-50 font-medium' : ''}`}
+                            onClick={() => handleStatusChange(bug.id, 'in_progress')}
+                          >
+                            {bug.status === 'in_progress' && <Check className="h-4 w-4" />}
+                            <span className={bug.status === 'in_progress' ? 'ml-0' : 'ml-6'}>W trakcie</span>
+                          </div>
+                          <div
+                            className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 flex items-center gap-2 ${bug.status === 'resolved' ? 'bg-green-50 font-medium' : ''}`}
+                            onClick={() => handleStatusChange(bug.id, 'resolved')}
+                          >
+                            {bug.status === 'resolved' && <Check className="h-4 w-4" />}
+                            <span className={bug.status === 'resolved' ? 'ml-0' : 'ml-6'}>Rozwiązany</span>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <CardTitle className="text-lg mt-2">{bug.title}</CardTitle>
                 </CardHeader>
