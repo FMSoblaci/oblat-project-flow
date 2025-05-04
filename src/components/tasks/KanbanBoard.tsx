@@ -55,13 +55,16 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
     const { active, over } = event;
     setCurrentDroppableId(null);
     
-    if (!over) return;
+    if (!over) {
+      setActiveId(null);
+      return;
+    }
     
     const taskId = active.id as string;
     const newStatus = over.id as 'todo' | 'in_progress' | 'done';
     const currentTask = tasks.find(task => task.id === taskId);
     
-    if (currentTask && currentTask.status !== newStatus) {
+    if (currentTask && currentTask.status !== newStatus && ['todo', 'in_progress', 'done'].includes(newStatus)) {
       setIsUpdating(true);
       try {
         await updateTask(taskId, { status: newStatus });
@@ -162,6 +165,7 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
                     onUpdate={onTaskUpdate} 
                     draggable={true}
                     id={task.id}
+                    isDragging={activeId === task.id}
                   />
                 </div>
               ))}
@@ -177,8 +181,13 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
 
       <DragOverlay>
         {activeTask ? (
-          <div className="w-full opacity-80">
-            <TaskCard task={activeTask} onUpdate={onTaskUpdate} />
+          <div className="w-full opacity-80 rotate-1 shadow-xl">
+            <TaskCard 
+              task={activeTask} 
+              onUpdate={onTaskUpdate}
+              isDragging={true}
+              id={activeTask.id}
+            />
           </div>
         ) : null}
       </DragOverlay>

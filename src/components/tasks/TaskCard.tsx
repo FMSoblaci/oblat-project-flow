@@ -23,9 +23,10 @@ interface TaskCardProps {
   onUpdate: () => void;
   draggable?: boolean;
   id?: string;
+  isDragging?: boolean;
 }
 
-const TaskCard = ({ task, onUpdate, draggable = false, id }: TaskCardProps) => {
+const TaskCard = ({ task, onUpdate, draggable = false, id, isDragging = false }: TaskCardProps) => {
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
   const [discussionDrawerOpen, setDiscussionDrawerOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -33,7 +34,7 @@ const TaskCard = ({ task, onUpdate, draggable = false, id }: TaskCardProps) => {
   
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: id || task.id,
-    disabled: !draggable
+    disabled: !draggable || isDragging
   });
 
   const style = transform ? {
@@ -68,7 +69,7 @@ const TaskCard = ({ task, onUpdate, draggable = false, id }: TaskCardProps) => {
   };
 
   const handleStatusChange = async (newStatus: 'todo' | 'in_progress' | 'done') => {
-    if (task.status === newStatus) return;
+    if (task.status === newStatus || isDragging) return;
     
     setIsUpdating(true);
     try {
@@ -111,20 +112,26 @@ const TaskCard = ({ task, onUpdate, draggable = false, id }: TaskCardProps) => {
   return (
     <>
       <Card 
-        className="hover:shadow-md transition-shadow duration-300 touch-manipulation"
+        className={`hover:shadow-md transition-shadow duration-300 touch-manipulation ${isDragging ? 'opacity-50' : ''}`}
         ref={draggable ? setNodeRef : undefined}
         style={draggable ? style : undefined}
-        {...(draggable ? { ...attributes, ...listeners } : {})}
+        {...(draggable && !isDragging ? { ...attributes, ...listeners } : {})}
       >
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Badge className={`${getStatusBadgeClass(task.status)} cursor-pointer`} variant="secondary">
+                <Badge 
+                  className={`${getStatusBadgeClass(task.status)} cursor-pointer`} 
+                  variant="secondary"
+                >
                   {getStatusLabel(task.status)}
                 </Badge>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="bg-white border shadow-md z-50">
+              <DropdownMenuContent 
+                align="start" 
+                className="bg-white border shadow-md z-[1000]"
+              >
                 <DropdownMenuItem 
                   onClick={() => handleStatusChange('todo')}
                   disabled={task.status === 'todo' || isUpdating}
