@@ -30,10 +30,10 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
   const commentsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open) {
+    if (open && task?.id) {
       fetchComments();
     }
-  }, [open, task.id]);
+  }, [open, task?.id]);
 
   useEffect(() => {
     // Scroll to bottom when comments change or drawer opens
@@ -43,6 +43,8 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
   }, [comments, open]);
 
   const fetchComments = async () => {
+    if (!task?.id) return;
+    
     setIsLoading(true);
     try {
       const commentsData = await getComments(task.id);
@@ -70,25 +72,48 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
   };
 
   const uploadImage = async (file: File): Promise<string | null> => {
-    const fileName = `${Date.now()}-${file.name}`;
-    const { data, error } = await supabase.storage
-      .from("task_attachments")
-      .upload(`comments/${task.id}/${fileName}`, file);
+    try {
+      const fileName = `${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage
+        .from("task_attachments")
+        .upload(`comments/${task.id}/${fileName}`, file);
 
-    if (error) {
-      console.error("Error uploading file:", error);
-      throw error;
+      if (error) {
+        console.error("Error uploading file:", error);
+        throw error;
+      }
+
+      const { data: publicUrl } = supabase.storage
+        .from("task_attachments")
+        .getPublicUrl(`comments/${task.id}/${fileName}`);
+
+      return publicUrl.publicUrl;
+    } catch (error) {
+      console.error("Error in uploadImage:", error);
+      toast({
+        title: "Błąd",
+        description: "Nie udało się przesłać pliku",
+        variant: "destructive",
+      });
+      return null;
     }
-
-    const { data: publicUrl } = supabase.storage
-      .from("task_attachments")
-      .getPublicUrl(`comments/${task.id}/${fileName}`);
-
-    return publicUrl.publicUrl;
   };
 
   const handleSubmitComment = async () => {
-    if ((!newComment.trim() && !selectedFile) || !profile) return;
+    if ((!newComment.trim() && !selectedFile) || !profile) {
+      console.log("Validation failed:", { 
+        newComment: newComment.trim(), 
+        hasFile: !!selectedFile, 
+        hasProfile: !!profile 
+      });
+      return;
+    }
+    
+    console.log("Submitting comment", { 
+      content: newComment, 
+      hasFile: !!selectedFile, 
+      profileName: profile?.full_name 
+    });
     
     setIsSubmitting(true);
     try {
@@ -98,17 +123,25 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
         imageUrl = await uploadImage(selectedFile);
       }
       
-      const comment = await createComment({
+      const commentInput = {
         task_id: task.id,
         content: newComment.trim() || "(załączono plik)",
         user_name: profile.full_name || "Anonimowy",
         image_url: imageUrl,
-      });
+      };
       
-      setComments([...comments, comment]);
+      console.log("Comment input:", commentInput);
+      const comment = await createComment(commentInput);
+      
+      setComments(prev => [...prev, comment]);
       setNewComment("");
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      
+      toast({
+        title: "Sukces",
+        description: "Komentarz został dodany",
+      });
     } catch (error) {
       console.error("Error submitting comment:", error);
       toast({
@@ -123,6 +156,12 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
 
   const formatDate = (dateString: string) => {
     return formatDistancePl(new Date(dateString));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && e.ctrlKey) {
+      handleSubmitComment();
+    }
   };
 
   return (
@@ -199,9 +238,11 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
               <Textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Napisz komentarz..."
+                onKeyDown={handleKeyDown}
+                placeholder="Napisz komentarz... (Ctrl+Enter aby wysłać)"
                 className="resize-none"
                 rows={2}
+                disabled={isSubmitting}
               />
             </div>
             
@@ -212,22 +253,34 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
                 onChange={handleFileChange}
                 accept="image/*"
                 className="hidden"
+                disabled={isSubmitting}
               />
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={handleFileSelect}
+                disabled={isSubmitting}
               >
                 <PaperclipIcon className="mr-1 h-4 w-4" />
                 Załącz plik
               </Button>
               
               <Button 
-                onClick={handleSubmitComment} 
+                onClick={handleSubmitComment}
                 disabled={isSubmitting}
+                className="bg-purple-600 hover:bg-purple-700"
               >
-                <Send className="mr-1 h-4 w-4" />
-                Wyślij
+                {isSubmitting ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                    Wysyłanie...
+                  </div>
+                ) : (
+                  <>
+                    <Send className="mr-1 h-4 w-4" />
+                    Wyślij
+                  </>
+                )}
               </Button>
             </div>
           </div>

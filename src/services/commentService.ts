@@ -33,6 +33,8 @@ export const getComments = async (taskId: string) => {
 };
 
 export const createComment = async (commentInput: CreateCommentInput): Promise<Comment> => {
+  console.log("Creating comment:", commentInput);
+  
   const { data, error } = await supabase
     .from('comments')
     .insert([commentInput])
@@ -44,5 +46,6 @@ export const createComment = async (commentInput: CreateCommentInput): Promise<C
     throw error;
   }
   
+  console.log("Comment created:", data);
   return data as Comment;
 };
