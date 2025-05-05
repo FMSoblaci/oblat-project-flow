@@ -43,6 +43,13 @@ export const createComment = async (commentInput: CreateCommentInput): Promise<C
     throw new Error("Missing task_id");
   }
   
+  // Make sure we're authenticated to satisfy RLS policies
+  const { data: authData } = await supabase.auth.getSession();
+  if (!authData.session) {
+    console.error("Error: User not authenticated");
+    throw new Error("User must be authenticated to create comments");
+  }
+  
   const { data, error } = await supabase
     .from('comments')
     .insert([commentInput])

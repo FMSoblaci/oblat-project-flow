@@ -73,6 +73,12 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
 
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
+      // Check authentication status before uploading
+      const { data: authData } = await supabase.auth.getSession();
+      if (!authData.session) {
+        throw new Error("User must be authenticated to upload files");
+      }
+      
       const fileName = `${Date.now()}-${file.name}`;
       console.log("Uploading file:", {
         fileName,
@@ -126,8 +132,19 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
       return;
     }
     
+    // Check authentication status
+    const { data: authData } = await supabase.auth.getSession();
+    if (!authData.session) {
+      toast({
+        title: "Błąd",
+        description: "Musisz być zalogowany, aby dodawać komentarze",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Allow comments even without profile by using default values
-    const userName = profile?.full_name || "Anonimowy użytkownik";
+    const userName = profile?.full_name || authData.session.user.email || "Anonimowy użytkownik";
     
     setIsSubmitting(true);
     try {
