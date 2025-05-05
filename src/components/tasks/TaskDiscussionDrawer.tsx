@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
@@ -105,7 +106,7 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
       console.error("Error in uploadImage:", error);
       toast({
         title: "Błąd",
-        description: "Nie uda��o się przesłać pliku",
+        description: "Nie udało się przesłać pliku",
         variant: "destructive",
       });
       return null;
@@ -288,7 +289,8 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
               />
             </div>
             
-            <div className="flex justify-between">
+            {/* Updated action buttons to ensure they're always visible */}
+            <div className="flex flex-wrap sm:flex-nowrap justify-between gap-2">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -302,6 +304,7 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
                 variant="outline" 
                 onClick={handleFileSelect}
                 disabled={isSubmitting}
+                className="flex-shrink-0"
               >
                 <PaperclipIcon className="mr-1 h-4 w-4" />
                 Załącz plik
@@ -310,7 +313,7 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
               <Button 
                 onClick={handleSubmitComment}
                 disabled={isSubmitting}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-purple-600 hover:bg-purple-700 flex-shrink-0 ml-auto"
               >
                 {isSubmitting ? (
                   <div className="flex items-center">
