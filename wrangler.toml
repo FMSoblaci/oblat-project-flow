@@ -1,0 +1,9 @@
+
+# Cloudflare Pages configuration
+
+[build]
+command = "bun install && bun run build"
+publish = "dist"
+
+[build.environment]
+NODE_VERSION = "18"
