@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
@@ -106,7 +105,7 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
       console.error("Error in uploadImage:", error);
       toast({
         title: "Błąd",
-        description: "Nie udało się przesłać pliku",
+        description: "Nie uda��o się przesłać pliku",
         variant: "destructive",
       });
       return null;
@@ -227,9 +226,14 @@ const TaskDiscussionDrawer = ({ open, onClose, task }: TaskDiscussionDrawerProps
             ) : (
               comments.map((comment) => (
                 <div key={comment.id} className="rounded-lg p-3 bg-gray-50">
-                  <div className="flex justify-between items-start">
-                    <span className="font-medium">{comment.user_name}</span>
-                    <span className="text-xs text-gray-500">{formatDate(comment.created_at)}</span>
+                  <div className="flex flex-col">
+                    <div className="flex justify-between items-start">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{comment.user_name}</span>
+                        <span className="text-xs text-gray-500">{comment.user_name.includes('@') ? '' : comment.user_name.includes('Anonimowy') ? '' : comment.user_name + '@example.com'}</span>
+                      </div>
+                      <span className="text-xs text-gray-500">{formatDate(comment.created_at)}</span>
+                    </div>
                   </div>
                   
                   <p className="mt-2 text-gray-700 whitespace-pre-line">{comment.content}</p>
