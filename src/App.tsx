@@ -33,6 +33,7 @@ const App = () => (
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Index />} />
               <Route path="/tasks" element={<Tasks />} />
+              <Route path="/tasks/:taskId" element={<Tasks />} />
               <Route path="/task-list" element={<TaskList />} />
               <Route path="/bugs" element={<Bugs />} />
               <Route path="/login-logs" element={<LoginLogs />} />

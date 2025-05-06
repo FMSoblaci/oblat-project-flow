@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -217,7 +216,7 @@ const Bugs = () => {
                     {bug.related_task_id && (
                       <div className="flex justify-between">
                         <span className="text-gray-500">Powiązane zadanie:</span>
-                        <Link to={`/tasks?id=${bug.related_task_id}`} className="text-blue-600 hover:underline">
+                        <Link to={`/tasks/${bug.related_task_id}`} className="text-blue-600 hover:underline">
                           Zobacz zadanie
                         </Link>
                       </div>
