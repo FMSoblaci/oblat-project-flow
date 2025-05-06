@@ -10,7 +10,8 @@ import {
   useSensor,
   useSensors,
   PointerSensor,
-  DragOverEvent
+  DragOverEvent,
+  useDroppable
 } from "@dnd-kit/core";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
@@ -21,6 +22,8 @@ interface KanbanBoardProps {
   tasks: Task[];
   onTaskUpdate: () => void;
 }
+
+type StatusType = 'todo' | 'in_progress' | 'done';
 
 const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
   const { toast } = useToast();
@@ -61,7 +64,7 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
     }
     
     const taskId = active.id as string;
-    const newStatus = over.id as 'todo' | 'in_progress' | 'done';
+    const newStatus = over.id as StatusType;
     const currentTask = tasks.find(task => task.id === taskId);
     
     if (currentTask && currentTask.status !== newStatus && ['todo', 'in_progress', 'done'].includes(newStatus)) {
@@ -98,14 +101,32 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
     }
   };
 
-  const getTasksByStatus = (status: 'todo' | 'in_progress' | 'done') => {
+  const getTasksByStatus = (status: StatusType) => {
     return tasks.filter(task => task.status === status);
   };
   
-  const calculateProgress = (status: 'todo' | 'in_progress' | 'done') => {
+  const calculateProgress = (status: StatusType) => {
     const statusTasks = getTasksByStatus(status).length;
     const total = tasks.length;
     return total > 0 ? Math.round((statusTasks / total) * 100) : 0;
+  };
+
+  // Create DropContainer component to use useDroppable hook
+  const DropContainer = ({ id, children }: { id: StatusType, children: React.ReactNode }) => {
+    const { setNodeRef } = useDroppable({
+      id: id,
+    });
+
+    return (
+      <div 
+        ref={setNodeRef}
+        className={`bg-white rounded-lg shadow p-4 ${
+          currentDroppableId === id ? 'ring-2 ring-purple-400 ring-opacity-70' : ''
+        }`}
+      >
+        {children}
+      </div>
+    );
   };
 
   return (
@@ -117,14 +138,8 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
       onDragEnd={handleDragEnd}
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {['todo', 'in_progress', 'done'].map((status) => (
-          <div 
-            key={status} 
-            id={status}
-            className={`bg-white rounded-lg shadow p-4 ${
-              currentDroppableId === status ? 'ring-2 ring-purple-400 ring-opacity-70' : ''
-            }`}
-          >
+        {(['todo', 'in_progress', 'done'] as StatusType[]).map((status) => (
+          <DropContainer key={status} id={status}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-medium text-lg">{getStatusName(status)}</h3>
               <Badge 
@@ -136,12 +151,12 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
                       : 'bg-green-100 text-green-800'
                 }
               >
-                {getTasksByStatus(status as 'todo' | 'in_progress' | 'done').length}
+                {getTasksByStatus(status).length}
               </Badge>
             </div>
             
             <div className="mb-4">
-              <Progress value={calculateProgress(status as 'todo' | 'in_progress' | 'done')} 
+              <Progress value={calculateProgress(status)} 
                 className={
                   status === 'todo' ? 'bg-amber-100 [&>div]:bg-amber-500' : 
                   status === 'in_progress' ? 'bg-blue-100 [&>div]:bg-blue-500' : 
@@ -152,9 +167,8 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
             
             <div 
               className="space-y-3 min-h-[200px] p-2"
-              id={status}
             >
-              {getTasksByStatus(status as 'todo' | 'in_progress' | 'done').map((task) => (
+              {getTasksByStatus(status).map((task) => (
                 <div 
                   key={task.id} 
                   className="transform transition-transform duration-300"
@@ -169,13 +183,13 @@ const KanbanBoard = ({ tasks, onTaskUpdate }: KanbanBoardProps) => {
                   />
                 </div>
               ))}
-              {getTasksByStatus(status as 'todo' | 'in_progress' | 'done').length === 0 && (
+              {getTasksByStatus(status).length === 0 && (
                 <div className="border border-dashed border-gray-300 rounded-md p-4 text-center text-gray-400 h-24 flex items-center justify-center">
                   Przeciągnij tutaj zadanie
                 </div>
               )}
             </div>
-          </div>
+          </DropContainer>
         ))}
       </div>
 
