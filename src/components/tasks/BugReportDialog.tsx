@@ -21,7 +21,7 @@ interface BugReportDialogProps {
 }
 
 const BugReportDialog = ({ open, onClose, onBugReported, taskId, taskTitle }: BugReportDialogProps) => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState<"critical" | "medium" | "low">("medium");
@@ -71,7 +71,7 @@ const BugReportDialog = ({ open, onClose, onBugReported, taskId, taskTitle }: Bu
         description,
         severity,
         related_task_id: relatedTaskId !== "none" ? relatedTaskId : undefined,
-        reported_by: profile?.full_name || undefined,
+        reported_by: user?.email || profile?.full_name || "Nieznany",
       });
       
       toast({
