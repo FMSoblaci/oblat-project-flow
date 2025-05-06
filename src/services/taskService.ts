@@ -26,6 +26,35 @@ export type UpdateTaskInput = {
   due_date?: string | null;
 };
 
+export const getTaskStats = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('status');
+    
+    if (error) {
+      console.error("Error fetching task stats:", error);
+      return { total: "0", todo: "0", inProgress: "0", done: "0" };
+    }
+    
+    // Count tasks by status
+    const total = data.length;
+    const todo = data.filter(task => task.status === 'todo').length;
+    const inProgress = data.filter(task => task.status === 'in_progress').length;
+    const done = data.filter(task => task.status === 'done').length;
+    
+    return {
+      total: total.toString(),
+      todo: todo.toString(),
+      inProgress: inProgress.toString(),
+      done: done.toString()
+    };
+  } catch (error) {
+    console.error("Unexpected error fetching task stats:", error);
+    return { total: "0", todo: "0", inProgress: "0", done: "0" };
+  }
+};
+
 export const getTasks = async (): Promise<Task[]> => {
   try {
     const { data, error } = await supabase
