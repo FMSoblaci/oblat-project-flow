@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { formatDistancePl, formatDatePl } from "@/lib/date-utils";
-import { Bug, MessageSquare, Check, ChevronDown } from "lucide-react";
+import { Bug, MessageSquare, Check, ChevronDown, ArrowRight } from "lucide-react";
 import { Task, updateTask } from "@/services/taskService";
 import BugReportDialog from "./BugReportDialog";
 import TaskDiscussionDrawer from "./TaskDiscussionDrawer";
 import { useDraggable } from "@dnd-kit/core";
+import { useNavigate } from "react-router-dom";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +33,7 @@ const TaskCard = ({ task, onUpdate, draggable = false, id, isDragging = false }:
   const [discussionDrawerOpen, setDiscussionDrawerOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: id || task.id,
@@ -185,22 +187,32 @@ const TaskCard = ({ task, onUpdate, draggable = false, id, isDragging = false }:
         </CardContent>
         <Separator />
         <CardFooter className="flex justify-between pt-3">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => setBugDialogOpen(true)}
-          >
-            <Bug className="mr-1 h-4 w-4" />
-            Błąd
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => setBugDialogOpen(true)}
+            >
+              <Bug className="mr-1 h-4 w-4" />
+              Błąd
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDiscussionDrawerOpen(true)}
+            >
+              <MessageSquare className="mr-1 h-4 w-4" />
+              Dyskusja
+            </Button>
+          </div>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            onClick={() => setDiscussionDrawerOpen(true)}
+            onClick={() => navigate(`/task-details/${task.id}`)}
           >
-            <MessageSquare className="mr-1 h-4 w-4" />
-            Dyskusja
+            Szczegóły
+            <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </CardFooter>
       </Card>
