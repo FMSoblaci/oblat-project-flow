@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -23,6 +24,7 @@ const Index = () => {
   const [bugStats, setBugStats] = useState({ total: "0", critical: "0", medium: "0", low: "0" });
   const [projectProgress, setProjectProgress] = useState({ progress: "0", plannedEndDate: "" });
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [recentBugs, setRecentBugs] = useState<Bug[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
@@ -56,6 +58,9 @@ const Index = () => {
         progress: progressData.progress,
         plannedEndDate: progressData.plannedEndDate
       });
+      
+      // Store all tasks for the timeline
+      setAllTasks(tasksData);
       
       // Get only the upcoming tasks (not done)
       setUpcomingTasks(tasksData.filter(task => task.status !== 'done').slice(0, 4));
@@ -125,7 +130,8 @@ const Index = () => {
   };
 
   const handleTaskCreated = (task: Task) => {
-    // Update the upcoming tasks list
+    // Update both task lists
+    setAllTasks(prev => [task, ...prev]);
     setUpcomingTasks(prev => [task, ...prev].slice(0, 4));
     setTaskDialogOpen(false);
     
@@ -255,6 +261,11 @@ const Index = () => {
               </Card>
             </div>
 
+            {/* Task Timeline Section - Full Width */}
+            {allTasks.length > 0 && (
+              <TaskTimeAxis tasks={allTasks} />
+            )}
+
             {/* Tasks and Bugs Sections */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               <Card>
@@ -263,9 +274,6 @@ const Index = () => {
                   <CardDescription>Zadania z najbliższymi terminami</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Add Task Time Axis above the upcoming tasks list */}
-                  <TaskTimeAxis tasks={upcomingTasks} />
-                  
                   {upcomingTasks.length > 0 ? (
                     upcomingTasks.map((task) => (
                       <div key={task.id}>
