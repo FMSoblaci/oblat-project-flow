@@ -5,7 +5,7 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip, ReferenceLine } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip, ReferenceLine, CartesianGrid } from 'recharts';
 import { format, addDays, startOfDay, endOfDay, endOfMonth, differenceInDays, isBefore, isAfter, subDays } from 'date-fns';
 import { formatDatePl } from "@/lib/date-utils";
 import { Task } from "@/services/taskService";
@@ -42,8 +42,8 @@ const TaskTimeAxis = ({ tasks }: TaskTimeAxisProps) => {
       return {
         id: task.id,
         title: task.title,
-        startDate: pastDate, // Simplified: all tasks start from the beginning of our timeline
-        endDate: task.dueDate,
+        startDate: isPast ? task.dueDate : today, // For past tasks, start from due date
+        endDate: isPast ? today : task.dueDate, // For past tasks, end at today
         dueDate: task.dueDate,
         isPast,
         isCompleted: task.completed,
@@ -54,28 +54,19 @@ const TaskTimeAxis = ({ tasks }: TaskTimeAxisProps) => {
     // Create the timeline data
     const timelineData = [];
     
-    // Add the today marker
-    timelineData.push({
-      date: today,
-      type: 'today',
-      label: 'Dziś',
-      position: 0, // Will be calculated
-      tasks: []
-    });
-
     // Add task data ranges
     taskRanges.forEach((task, index) => {
       timelineData.push({
         id: task.id,
         title: task.title,
-        startDate: task.startDate,
-        endDate: task.endDate,
+        startDate: task.startDate.getTime(),
+        endDate: task.endDate.getTime(),
         type: 'task',
         status: task.status,
         isPast: task.isPast,
         isCompleted: task.isCompleted,
         label: task.title,
-        position: index + 1 // Stacked position for the chart
+        position: index // Stacked position for the chart
       });
     });
 
@@ -86,14 +77,6 @@ const TaskTimeAxis = ({ tasks }: TaskTimeAxisProps) => {
     if (active && payload && payload.length > 0) {
       const data = payload[0].payload;
       
-      if (data.type === 'today') {
-        return (
-          <div className="bg-white p-2 border rounded shadow-sm">
-            <p className="text-xs font-medium">Dziś</p>
-          </div>
-        );
-      }
-      
       if (data.type === 'task') {
         return (
           <div className="bg-white p-3 border rounded shadow-sm max-w-xs">
@@ -101,7 +84,7 @@ const TaskTimeAxis = ({ tasks }: TaskTimeAxisProps) => {
             <div className="text-xs space-y-1">
               <div className="flex justify-between">
                 <span className="text-gray-500">Termin:</span>
-                <span className="font-medium">{formatDatePl(data.endDate, 'PPP')}</span>
+                <span className="font-medium">{formatDatePl(new Date(data.isPast ? data.startDate : data.endDate), 'PPP')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Status:</span>
@@ -115,6 +98,12 @@ const TaskTimeAxis = ({ tasks }: TaskTimeAxisProps) => {
                    'Do zrobienia'}
                 </span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Czasookres:</span>
+                <span className="font-medium">
+                  {data.isPast ? 'Zadanie przeszłe' : 'Zadanie przyszłe'}
+                </span>
+              </div>
             </div>
           </div>
         );
@@ -124,10 +113,9 @@ const TaskTimeAxis = ({ tasks }: TaskTimeAxisProps) => {
   };
 
   const getBarColor = (entry: any) => {
-    if (entry.type === 'today') return 'transparent';
     if (entry.isCompleted) return '#10b981'; // Green for completed
     if (entry.isPast) return '#ef4444'; // Red for past due
-    return '#9b87f5'; // Purple for upcoming
+    return '#10b981'; // Green for upcoming
   };
 
   if (!timeAxisData.length) {
@@ -144,10 +132,11 @@ const TaskTimeAxis = ({ tasks }: TaskTimeAxisProps) => {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={timeAxisData}
-            layout="vertical"
-            margin={{ top: 20, right: 30, left: 150, bottom: 20 }}
-            barSize={15}
+            layout="horizontal"
+            margin={{ top: 30, right: 30, left: 30, bottom: 20 }}
+            barSize={20}
           >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis 
               type="number" 
               domain={['dataMin', 'dataMax']}
@@ -155,31 +144,45 @@ const TaskTimeAxis = ({ tasks }: TaskTimeAxisProps) => {
                 const date = new Date(value);
                 return format(date, 'd MMM');
               }}
+              padding={{ left: 10, right: 10 }}
             />
             <YAxis 
               type="category"
               dataKey="title"
-              width={120}
+              width={150}
               tick={{ fontSize: 12 }}
-              tickFormatter={(value, index) => {
-                const item = timeAxisData[index];
-                if (item.type === 'today') return 'Dziś';
+              tickFormatter={(value) => {
                 // Limit length of task titles
-                return value?.length > 25 ? value.substr(0, 22) + '...' : value;
+                return value?.length > 20 ? value.substr(0, 18) + '...' : value;
               }}
               tickLine={false}
             />
             <Tooltip content={<CustomTooltip />} />
-            <ReferenceLine x={new Date().getTime()} stroke="#9b87f5" strokeWidth={2} />
+            <ReferenceLine 
+              x={new Date().getTime()} 
+              stroke="#8B5CF6" 
+              strokeWidth={2}
+              label={{ 
+                value: "Dzisiaj",
+                position: "top",
+                fill: "#8B5CF6",
+                fontSize: 12,
+                fontWeight: "bold"
+              }}
+            />
             <Bar 
-              dataKey={() => 1} // Consistent bar height
-              background={{ fill: '#f1f5f9' }}
+              dataKey={(entry) => entry.endDate - entry.startDate} 
+              name="Duration" 
+              stackId="a"
+              minPointSize={2}
+              background={false}
             >
               {timeAxisData.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`}
                   fill={getBarColor(entry)}
                   radius={4}
+                  x={entry.startDate}
                 />
               ))}
             </Bar>
