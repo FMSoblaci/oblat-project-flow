@@ -133,7 +133,7 @@ const TaskTimeAxis = ({ tasks }: TaskTimeAxisProps) => {
                 <Cell 
                   key={`cell-${index}`}
                   fill={entry.isToday ? 'transparent' : '#9b87f5'}
-                  radius={[4, 4, 0, 0]} 
+                  radius={4} // Fixed: Changed from [4, 4, 0, 0] to a single number
                 />
               ))}
             </Bar>
