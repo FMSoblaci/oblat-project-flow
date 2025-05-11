@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -14,6 +13,7 @@ import AppNavigation from "@/components/AppNavigation";
 import { useNavigate } from "react-router-dom";
 import TaskDialog from "@/components/tasks/TaskDialog";
 import { Progress } from "@/components/ui/progress";
+import TaskTimeAxis from "@/components/dashboard/TaskTimeAxis";
 
 const Index = () => {
   const { profile } = useAuth();
@@ -263,6 +263,9 @@ const Index = () => {
                   <CardDescription>Zadania z najbliższymi terminami</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Add Task Time Axis above the upcoming tasks list */}
+                  <TaskTimeAxis tasks={upcomingTasks} />
+                  
                   {upcomingTasks.length > 0 ? (
                     upcomingTasks.map((task) => (
                       <div key={task.id}>
