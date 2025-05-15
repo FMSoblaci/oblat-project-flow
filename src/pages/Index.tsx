@@ -14,6 +14,7 @@ import AppNavigation from "@/components/AppNavigation";
 import { useNavigate } from "react-router-dom";
 import TaskDialog from "@/components/tasks/TaskDialog";
 import { Progress } from "@/components/ui/progress";
+import TaskTimeAxis from "@/components/dashboard/TaskTimeAxis";
 
 const Index = () => {
   const { profile } = useAuth();
@@ -23,6 +24,7 @@ const Index = () => {
   const [bugStats, setBugStats] = useState({ total: "0", critical: "0", medium: "0", low: "0" });
   const [projectProgress, setProjectProgress] = useState({ progress: "0", plannedEndDate: "" });
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [recentBugs, setRecentBugs] = useState<Bug[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
@@ -56,6 +58,9 @@ const Index = () => {
         progress: progressData.progress,
         plannedEndDate: progressData.plannedEndDate
       });
+      
+      // Store all tasks for the timeline
+      setAllTasks(tasksData);
       
       // Get only the upcoming tasks (not done)
       setUpcomingTasks(tasksData.filter(task => task.status !== 'done').slice(0, 4));
@@ -125,7 +130,8 @@ const Index = () => {
   };
 
   const handleTaskCreated = (task: Task) => {
-    // Update the upcoming tasks list
+    // Update both task lists
+    setAllTasks(prev => [task, ...prev]);
     setUpcomingTasks(prev => [task, ...prev].slice(0, 4));
     setTaskDialogOpen(false);
     
